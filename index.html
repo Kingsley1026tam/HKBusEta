@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#f2f2f6">
     <title>HK Bus Plus</title>
     
     <link rel="icon" type="image/png" href="AppIcon.png">
@@ -17,10 +21,12 @@
             --ctb-yellow: #fff200; --ctb-blue: #00558e; --nlb-green: #007a61;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang HK", sans-serif; }
+        /* Added tap highlight fix for native app feel */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang HK", sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: #000; display: flex; justify-content: center; align-items: center; height: 100dvh; overflow: hidden; }
 
-        .app-container { width: 100%; max-width: 500px; height: 100dvh; background-color: var(--app-bg); display: flex; flex-direction: column; position: relative; }
+        /* FIX 4: Removed max-width: 500px for iPad Full Screen */
+        .app-container { width: 100%; height: 100dvh; background-color: var(--app-bg); display: flex; flex-direction: column; position: relative; }
         .app-header { background: var(--box-bg); padding: 55px 15px 15px 15px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
         .app-header h1 { font-size: 26px; font-weight: 800; }
 
@@ -28,10 +34,12 @@
         .page.active { display: flex; }
         
         .scrollable-content { flex: 1; overflow-y: auto; padding: 10px; }
+        .scrollable-content::-webkit-scrollbar { display: none; } /* Hides scrollbar for app look */
+
         .section-title { font-size: 18px; font-weight: 700; margin: 15px 5px 10px 5px; color: var(--text-main); }
 
-        .route-item { background: var(--box-bg); border-radius: 14px; padding: 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .route-item:active { background: #f2f2f2; }
+        .route-item { background: var(--box-bg); border-radius: 14px; padding: 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: transform 0.1s; }
+        .route-item:active { background: #f2f2f2; transform: scale(0.98); }
         
         .route-badge { color: #fff; font-size: 17px; font-weight: 800; padding: 8px 4px; border-radius: 10px; min-width: 65px; text-align: center; }
         .badge-kmb { background-color: var(--kmb-red); }
@@ -48,8 +56,13 @@
         .search-input-wrapper input { flex: 1; border: none; background: transparent; font-size: 17px; outline: none; margin-left: 8px; text-transform: uppercase; }
 
         #map { width: 100%; height: 35vh; flex-shrink: 0; }
-        .back-bar { padding: 10px; background: white; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; }
-        .back-btn { background: #f2f2f2; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; }
+        .back-bar { padding: 10px 15px; background: white; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; }
+        
+        /* FIX 5: Arrow back button styling */
+        .back-btn { background: transparent; border: none; color: #007aff; display: flex; align-items: center; gap: 4px; font-size: 16px; font-weight: 500; cursor: pointer; }
+        .back-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+        
+        .fav-btn { background: #f2f2f2; border: none; padding: 6px 10px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600;}
 
         .stop-row { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; background: white; align-items: center; }
         .stop-name { font-weight: 500; font-size: 14px; flex: 1; padding-right: 10px; }
@@ -69,8 +82,8 @@
     <div id="page-home" class="page active">
         <div class="app-header"><h1>HK Bus</h1></div>
         <div class="scrollable-content">
-            <h2 class="section-title">📍 Nearby</h2>
-            <div id="nearby-list"><p style="padding:10px; color:#888;">Searching for GPS...</p></div>
+            <h2 class="section-title">⭐ Favorites</h2>
+            <div id="nearby-list"><p style="padding:10px; color:#888; font-size: 13px;">No favorites yet. Open a route and click 'Save'!</p></div>
             
             <h2 class="section-title">🚌 All Routes</h2>
             <div id="all-routes-list"><p style="padding:10px; color:#888;">Loading database...</p></div>
@@ -92,8 +105,11 @@
 
     <div id="page-details" class="page">
         <div class="back-bar">
-            <button class="back-btn" onclick="showPage('home')">Back</button>
+            <button class="back-btn" onclick="showPage('home')">
+                <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> Back
+            </button>
             <div id="details-title" style="font-weight:700; font-size:14px;"></div>
+            <button class="fav-btn" id="fav-btn" onclick="toggleFav()">Save</button>
         </div>
         <div id="map"></div>
         <div class="scrollable-content" id="details-list"></div>
@@ -114,12 +130,15 @@
     let allRoutesStore = [];
     let map = null;
     let currentEtaToken = 0; 
+    let currentRouteIndex = -1;
+    let favorites = JSON.parse(localStorage.getItem('hkbus_favs')) || [];
 
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
         document.getElementById('page-' + id).classList.add('active');
         if(id !== 'details') document.getElementById('tab-' + id).classList.add('active');
+        if(id === 'home') renderFavorites();
     }
 
     async function loadDatabase() {
@@ -135,7 +154,8 @@
                 kmbRes.value.data.forEach(r => {
                     if(!r.route) return;
                     const isLWB = ['A','E','NA','R','S','X'].some(p => r.route.startsWith(p));
-                    allRoutesStore.push({ no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'KMB/LWB', badge: isLWB ? 'badge-lwb' : 'badge-kmb', dir: r.bound || 'I' });
+                    // FIX 1: Save actual service_type for KMB
+                    allRoutesStore.push({ no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'KMB/LWB', badge: isLWB ? 'badge-lwb' : 'badge-kmb', dir: r.bound || 'I', serviceType: r.service_type || '1' });
                 });
             }
 
@@ -151,15 +171,14 @@
                     if(!r.routeNo) return;
                     const rawName = r.routeName_c || r.routeName_tc || "Unknown>Unknown";
                     const nameParts = rawName.split('>');
-                    // NLB uses hidden routeIds to get stations! Saved here:
                     allRoutesStore.push({ no: r.routeNo, dest: nameParts[1] || nameParts[0], orig: nameParts[0], co: 'NLB', badge: 'badge-nlb', dir: '1', routeId: r.routeId });
                 });
             }
 
             const allList = document.getElementById('all-routes-list');
             if (allRoutesStore.length > 0) {
-                // FIXED 5R BUG: Safely passing array index instead of strings
                 allList.innerHTML = allRoutesStore.map((r, i) => renderItem(r, i)).join('');
+                renderFavorites();
             } else {
                 allList.innerHTML = '<p style="padding:10px; color:red;">Failed to fetch APIs.</p>';
             }
@@ -169,7 +188,6 @@
         }
     }
 
-    // FIXED: Now uses safe index lookup
     function renderItem(r, index) {
         return `
             <div class="route-item" onclick="openRoute(${index})">
@@ -186,7 +204,6 @@
         const results = document.getElementById('search-results');
         if(!query) return;
         
-        // Fix search mapping to pass correct index
         const filteredHTML = allRoutesStore.map((r, index) => {
             if (r.no === query) return renderItem(r, index);
             return '';
@@ -195,24 +212,58 @@
         results.innerHTML = filteredHTML || '<p style="text-align:center; padding:20px;">No results found.</p>';
     }
 
-    function openRoute(index) {
-        const r = allRoutesStore[index];
-        openDetails(r.no, r.co, r.dir, r.dest, r.routeId);
-    }
-
-    async function initNearby(lat, lon) {
-        const nearbyDiv = document.getElementById('nearby-list');
-        if(allRoutesStore.length > 0) {
-             nearbyDiv.innerHTML = `<p style="font-size:12px; color:#888; padding: 5px;">GPS Active</p>` + allRoutesStore.slice(10, 15).map((r, i) => renderItem(r, i+10)).join('');
+    // FIX 3: Replaced fake GPS slice with Real Favorites logic
+    function renderFavorites() {
+        const list = document.getElementById('nearby-list');
+        const favHTML = favorites.map(idx => {
+            if(allRoutesStore[idx]) return renderItem(allRoutesStore[idx], idx);
+            return '';
+        }).join('');
+        
+        if(favHTML) {
+            list.innerHTML = favHTML;
+        } else {
+            list.innerHTML = '<p style="padding:10px; color:#888; font-size: 13px;">No favorites yet. Open a route and click "Save"!</p>';
         }
     }
 
-    // --- UPGRADED ETA ENGINE (Fixed CTB & NLB) ---
-    async function openDetails(no, co, dir, dest, routeId) {
+    function toggleFav() {
+        if(currentRouteIndex === -1) return;
+        const btn = document.getElementById('fav-btn');
+        const pos = favorites.indexOf(currentRouteIndex);
+        if(pos > -1) {
+            favorites.splice(pos, 1);
+            btn.innerText = "Save";
+            btn.style.background = "#f2f2f2";
+        } else {
+            favorites.push(currentRouteIndex);
+            btn.innerText = "Saved ⭐";
+            btn.style.background = "#fff200";
+        }
+        localStorage.setItem('hkbus_favs', JSON.stringify(favorites));
+    }
+
+    function openRoute(index) {
+        const r = allRoutesStore[index];
+        currentRouteIndex = index;
+        
+        // Update Fav Button UI
+        const btn = document.getElementById('fav-btn');
+        if(favorites.includes(index)) {
+            btn.innerText = "Saved ⭐"; btn.style.background = "#fff200";
+        } else {
+            btn.innerText = "Save"; btn.style.background = "#f2f2f2";
+        }
+
+        // Pass serviceType to details
+        openDetails(r.no, r.co, r.dir, r.dest, r.routeId, r.serviceType);
+    }
+
+    async function openDetails(no, co, dir, dest, routeId, serviceType) {
         showPage('details');
         document.getElementById('details-title').innerText = `${no} 往 ${dest || 'Unknown'}`;
         const list = document.getElementById('details-list');
-        list.innerHTML = '<p style="padding:20px; text-align:center; color:#888;">Initializing Live ETA...</p>';
+        list.innerHTML = '<p style="padding:40px; text-align:center; color:#888;">Initializing Live ETA...</p>';
 
         currentEtaToken++; 
         const myToken = currentEtaToken;
@@ -227,21 +278,21 @@
                 let isOutbound = String(dir).toUpperCase().startsWith('O');
                 let dirWord = isOutbound ? 'outbound' : 'inbound';
                 let dirLetter = isOutbound ? 'O' : 'I';
+                let sType = serviceType || '1'; // FIX 1: Using actual service type!
 
-                let stopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${no}/${dirWord}/1`);
+                let stopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${no}/${dirWord}/${sType}`);
                 let stopsData = await stopsRes.json();
                 let stops = stopsData.data || [];
 
-                // Smart Fallback
                 if (stops.length === 0) {
                     dirWord = dirWord === 'outbound' ? 'inbound' : 'outbound';
                     dirLetter = dirLetter === 'O' ? 'I' : 'O';
-                    stopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${no}/${dirWord}/1`);
+                    stopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${no}/${dirWord}/${sType}`);
                     stopsData = await stopsRes.json();
                     stops = stopsData.data || [];
                 }
 
-                const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-eta/${no}/1`);
+                const etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-eta/${no}/${sType}`);
                 const etaData = await etaRes.json();
                 const allEtas = etaData.data || [];
 
@@ -254,7 +305,7 @@
                         const nameData = await nameRes.json();
                         const stopName = nameData.data.name_tc;
 
-                        const stopEtas = allEtas.filter(e => e.seq === s.seq && e.dir === dirLetter && e.eta);
+                        const stopEtas = allEtas.filter(e => String(e.seq) === String(s.seq) && e.dir === dirLetter && e.eta);
                         let etaText = 'No ETA';
                         if (stopEtas.length > 0) {
                             const min = Math.round((new Date(stopEtas[0].eta) - new Date()) / 60000);
@@ -266,7 +317,6 @@
                 }
 
             } else if (co === 'CTB') {
-                // FIXED: Tries Outbound first, auto-switches to Inbound if route is circular
                 let dirWord = 'outbound';
                 let stopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${no}/${dirWord}`);
                 let stopsData = await stopsRes.json();
@@ -291,7 +341,6 @@
 
                         const etaRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${s.stop}/${no}`);
                         const etaData = await etaRes.json();
-                        // FIXED: Citybus ETA returns "I" or "O", not "inbound"
                         const etas = (etaData.data || []).filter(e => e.dir === (dirWord === 'outbound' ? 'O' : 'I') && e.eta);
                         
                         let etaText = 'No ETA';
@@ -305,7 +354,6 @@
                 }
 
             } else if (co === 'NLB') {
-                // FIXED: Fully implemented NLB Engine via hidden routeId!
                 const stopsRes = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=${routeId}`);
                 const stopsData = await stopsRes.json();
                 const stops = stopsData.stops || [];
@@ -323,8 +371,9 @@
                         
                         let etaText = 'No ETA';
                         if (etas.length > 0) {
-                            // NLB returns standard datetime: "2026-04-16 19:30:00"
-                            const etaTime = new Date(etas[0].estimatedArrivalTime.replace(' ', 'T') + '+08:00'); 
+                            // FIX 2: Safely parse NLB string to prevent Safari NaN errors
+                            const safeDateStr = etas[0].estimatedArrivalTime.replace(/-/g, '/');
+                            const etaTime = new Date(safeDateStr); 
                             const min = Math.round((etaTime - new Date()) / 60000);
                             etaText = min > 0 ? min + ' min' : (min <= 0 ? 'Arriving' : 'No ETA');
                         }
@@ -335,7 +384,7 @@
                 }
             }
         } catch(e) {
-            list.innerHTML = '<p style="padding:20px; color:red; text-align:center;">Network error while fetching Live ETA.</p>';
+            list.innerHTML = '<p style="padding:40px; color:red; text-align:center;">Network error while fetching Live ETA.</p>';
         }
     }
 
@@ -343,13 +392,7 @@
         if(e.key === 'Enter') { performSearch(); e.target.blur(); }
     });
 
-    window.onload = () => {
-        loadDatabase();
-        navigator.geolocation.getCurrentPosition(
-            p => setTimeout(() => initNearby(p.coords.latitude, p.coords.longitude), 1000), 
-            e => {} 
-        );
-    };
+    window.onload = loadDatabase;
 </script>
 </body>
 </html>
