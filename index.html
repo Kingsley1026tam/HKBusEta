@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#f2f2f6">
-    <title>HK Bus Plus</title>
+    <title>香港巴士 Plus</title>
     
     <link rel="icon" type="image/png" href="AppIcon.png">
     <link rel="apple-touch-icon" href="AppIcon.png">
@@ -21,11 +21,9 @@
             --ctb-yellow: #fff200; --ctb-blue: #00558e; --nlb-green: #007a61;
         }
 
-        /* Added tap highlight fix for native app feel */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang HK", sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: #000; display: flex; justify-content: center; align-items: center; height: 100dvh; overflow: hidden; }
 
-        /* FIX 4: Removed max-width: 500px for iPad Full Screen */
         .app-container { width: 100%; height: 100dvh; background-color: var(--app-bg); display: flex; flex-direction: column; position: relative; }
         .app-header { background: var(--box-bg); padding: 55px 15px 15px 15px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
         .app-header h1 { font-size: 26px; font-weight: 800; }
@@ -34,7 +32,7 @@
         .page.active { display: flex; }
         
         .scrollable-content { flex: 1; overflow-y: auto; padding: 10px; }
-        .scrollable-content::-webkit-scrollbar { display: none; } /* Hides scrollbar for app look */
+        .scrollable-content::-webkit-scrollbar { display: none; }
 
         .section-title { font-size: 18px; font-weight: 700; margin: 15px 5px 10px 5px; color: var(--text-main); }
 
@@ -48,8 +46,11 @@
         .badge-nlb { background-color: var(--nlb-green); }
 
         .route-info { flex: 1; }
-        .route-dest { font-size: 15px; font-weight: 600; color: #333; }
+        .route-dest { font-size: 15px; font-weight: 600; color: #333; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
         .route-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        
+        /* Special Route Badge Styling */
+        .sp-badge { font-size: 10px; background-color: #ffe5e5; color: var(--kmb-red); padding: 2px 6px; border-radius: 6px; font-weight: 700; border: 1px solid #ffcccc; white-space: nowrap; }
 
         .search-box { padding: 12px; background: var(--box-bg); border-bottom: 1px solid var(--border-color); }
         .search-input-wrapper { display: flex; background: #e9e9eb; border-radius: 10px; padding: 10px 12px; align-items: center; }
@@ -58,11 +59,10 @@
         #map { width: 100%; height: 35vh; flex-shrink: 0; }
         .back-bar { padding: 10px 15px; background: white; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; }
         
-        /* FIX 5: Arrow back button styling */
         .back-btn { background: transparent; border: none; color: #007aff; display: flex; align-items: center; gap: 4px; font-size: 16px; font-weight: 500; cursor: pointer; }
         .back-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
         
-        .fav-btn { background: #f2f2f2; border: none; padding: 6px 10px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600;}
+        .fav-btn { background: #f2f2f2; border: none; padding: 6px 10px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s;}
 
         .stop-row { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; background: white; align-items: center; }
         .stop-name { font-weight: 500; font-size: 14px; flex: 1; padding-right: 10px; }
@@ -80,18 +80,18 @@
 <div class="app-container">
     
     <div id="page-home" class="page active">
-        <div class="app-header"><h1>HK Bus</h1></div>
+        <div class="app-header"><h1>香港巴士</h1></div>
         <div class="scrollable-content">
             <h2 class="section-title">已儲存</h2>
-            <div id="nearby-list"><p style="padding:10px; color:#888; font-size: 13px;">No favorites yet. Open a route and click 'Save'!</p></div>
+            <div id="nearby-list"><p style="padding:10px; color:#888; font-size: 13px;">暫無已儲存路線。請開啟路線並點擊「儲存」！</p></div>
             
             <h2 class="section-title">全部</h2>
-            <div id="all-routes-list"><p style="padding:10px; color:#888;">Loading database...</p></div>
+            <div id="all-routes-list"><p style="padding:10px; color:#888;">載入路線資料庫中...</p></div>
         </div>
     </div>
 
     <div id="page-search" class="page">
-        <div class="app-header"><h1>Search</h1></div>
+        <div class="app-header"><h1>搜尋</h1></div>
         <div class="search-box">
             <div class="search-input-wrapper">
                 <svg viewBox="0 0 24 24" width="18" fill="#8e8e93"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
@@ -99,17 +99,17 @@
             </div>
         </div>
         <div class="scrollable-content" id="search-results">
-            <p style="text-align:center; padding: 40px; color: #888;">Enter route and press Enter</p>
+            <p style="text-align:center; padding: 40px; color: #888;">輸入路線號碼並按 Enter 搜尋</p>
         </div>
     </div>
 
     <div id="page-details" class="page">
         <div class="back-bar">
             <button class="back-btn" onclick="showPage('home')">
-                <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> Back
+                <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> 返回
             </button>
             <div id="details-title" style="font-weight:700; font-size:14px;"></div>
-            <button class="fav-btn" id="fav-btn" onclick="toggleFav()">Save</button>
+            <button class="fav-btn" id="fav-btn" onclick="toggleFav()">儲存</button>
         </div>
         <div id="map"></div>
         <div class="scrollable-content" id="details-list"></div>
@@ -117,10 +117,10 @@
 
     <div class="bottom-nav">
         <div class="nav-tab active" id="tab-home" onclick="showPage('home')">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span>
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>首頁</span>
         </div>
         <div class="nav-tab" id="tab-search" onclick="showPage('search')">
-            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><span>Search</span>
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><span>搜尋</span>
         </div>
     </div>
 </div>
@@ -154,24 +154,26 @@
                 kmbRes.value.data.forEach(r => {
                     if(!r.route) return;
                     const isLWB = ['A','E','NA','R','S','X'].some(p => r.route.startsWith(p));
-                    // FIX 1: Save actual service_type for KMB
-                    allRoutesStore.push({ no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'KMB/LWB', badge: isLWB ? 'badge-lwb' : 'badge-kmb', dir: r.bound || 'I', serviceType: r.service_type || '1' });
+                    // Added isSp detection
+                    const sType = r.service_type || '1';
+                    const isSp = sType !== '1';
+                    allRoutesStore.push({ no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'KMB/LWB', badge: isLWB ? 'badge-lwb' : 'badge-kmb', dir: r.bound || 'I', serviceType: sType, isSp: isSp });
                 });
             }
 
             if (ctbRes.status === 'fulfilled' && ctbRes.value?.data) {
                 ctbRes.value.data.forEach(r => {
                     if(!r.route) return;
-                    allRoutesStore.push({ no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'CTB', badge: 'badge-ctb', dir: r.dir || 'inbound' });
+                    allRoutesStore.push({ no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'CTB', badge: 'badge-ctb', dir: r.dir || 'inbound', isSp: false });
                 });
             }
 
             if (nlbRes.status === 'fulfilled' && nlbRes.value?.routes) {
                 nlbRes.value.routes.forEach(r => {
                     if(!r.routeNo) return;
-                    const rawName = r.routeName_c || r.routeName_tc || "Unknown>Unknown";
+                    const rawName = r.routeName_c || r.routeName_tc || "未知>未知";
                     const nameParts = rawName.split('>');
-                    allRoutesStore.push({ no: r.routeNo, dest: nameParts[1] || nameParts[0], orig: nameParts[0], co: 'NLB', badge: 'badge-nlb', dir: '1', routeId: r.routeId });
+                    allRoutesStore.push({ no: r.routeNo, dest: nameParts[1] || nameParts[0], orig: nameParts[0], co: 'NLB', badge: 'badge-nlb', dir: '1', routeId: r.routeId, isSp: false });
                 });
             }
 
@@ -180,21 +182,23 @@
                 allList.innerHTML = allRoutesStore.map((r, i) => renderItem(r, i)).join('');
                 renderFavorites();
             } else {
-                allList.innerHTML = '<p style="padding:10px; color:red;">Failed to fetch APIs.</p>';
+                allList.innerHTML = '<p style="padding:10px; color:red;">無法獲取 API 資料。</p>';
             }
 
         } catch (e) {
-            document.getElementById('all-routes-list').innerHTML = '<p style="padding:10px; color:red;">System Error. ' + e.message + '</p>';
+            document.getElementById('all-routes-list').innerHTML = '<p style="padding:10px; color:red;">系統發生錯誤。 ' + e.message + '</p>';
         }
     }
 
     function renderItem(r, index) {
+        // Special badge HTML
+        const spBadge = r.isSp ? '<span class="sp-badge">特別班次</span>' : '';
         return `
             <div class="route-item" onclick="openRoute(${index})">
                 <div class="route-badge ${r.badge}">${r.no}</div>
                 <div class="route-info">
-                    <div class="route-dest">往 ${r.dest || 'Unknown'}</div>
-                    <div class="route-sub">${r.co} • 由 ${r.orig || 'Unknown'}</div>
+                    <div class="route-dest">往 ${r.dest || '未知'} ${spBadge}</div>
+                    <div class="route-sub">${r.co} • 由 ${r.orig || '未知'}</div>
                 </div>
             </div>`;
     }
@@ -209,10 +213,9 @@
             return '';
         }).join('');
         
-        results.innerHTML = filteredHTML || '<p style="text-align:center; padding:20px;">No results found.</p>';
+        results.innerHTML = filteredHTML || '<p style="text-align:center; padding:20px; color: #888;">找不到相關路線。</p>';
     }
 
-    // FIX 3: Replaced fake GPS slice with Real Favorites logic
     function renderFavorites() {
         const list = document.getElementById('nearby-list');
         const favHTML = favorites.map(idx => {
@@ -223,7 +226,7 @@
         if(favHTML) {
             list.innerHTML = favHTML;
         } else {
-            list.innerHTML = '<p style="padding:10px; color:#888; font-size: 13px;">無已儲存路線</p>';
+            list.innerHTML = '<p style="padding:10px; color:#888; font-size: 13px;">暫無已儲存路線。請開啟路線並點擊「儲存」！</p>';
         }
     }
 
@@ -233,11 +236,11 @@
         const pos = favorites.indexOf(currentRouteIndex);
         if(pos > -1) {
             favorites.splice(pos, 1);
-            btn.innerText = "Save";
+            btn.innerText = "儲存";
             btn.style.background = "#f2f2f2";
         } else {
             favorites.push(currentRouteIndex);
-            btn.innerText = "已儲存";
+            btn.innerText = "已儲存 ⭐";
             btn.style.background = "#fff200";
         }
         localStorage.setItem('hkbus_favs', JSON.stringify(favorites));
@@ -247,23 +250,21 @@
         const r = allRoutesStore[index];
         currentRouteIndex = index;
         
-        // Update Fav Button UI
         const btn = document.getElementById('fav-btn');
         if(favorites.includes(index)) {
-            btn.innerText = "已儲存"; btn.style.background = "#fff200";
+            btn.innerText = "已儲存 ⭐"; btn.style.background = "#fff200";
         } else {
             btn.innerText = "儲存"; btn.style.background = "#f2f2f2";
         }
 
-        // Pass serviceType to details
         openDetails(r.no, r.co, r.dir, r.dest, r.routeId, r.serviceType);
     }
 
     async function openDetails(no, co, dir, dest, routeId, serviceType) {
         showPage('details');
-        document.getElementById('details-title').innerText = `${no} 往 ${dest || 'Unknown'}`;
+        document.getElementById('details-title').innerText = `${no} 往 ${dest || '未知'}`;
         const list = document.getElementById('details-list');
-        list.innerHTML = '<p style="padding:40px; text-align:center; color:#888;">Initializing Live ETA...</p>';
+        list.innerHTML = '<p style="padding:40px; text-align:center; color:#888;">正在讀取實時到站時間...</p>';
 
         currentEtaToken++; 
         const myToken = currentEtaToken;
@@ -278,7 +279,7 @@
                 let isOutbound = String(dir).toUpperCase().startsWith('O');
                 let dirWord = isOutbound ? 'outbound' : 'inbound';
                 let dirLetter = isOutbound ? 'O' : 'I';
-                let sType = serviceType || '1'; // FIX 1: Using actual service type!
+                let sType = serviceType || '1'; 
 
                 let stopsRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${no}/${dirWord}/${sType}`);
                 let stopsData = await stopsRes.json();
@@ -296,7 +297,7 @@
                 const etaData = await etaRes.json();
                 const allEtas = etaData.data || [];
 
-                list.innerHTML = stops.map(s => `<div id="row-${myToken}-${s.seq}" class="stop-row"><span class="stop-name" style="color:#aaa;">Loading Stop ${s.seq}...</span><b class="stop-eta" style="color:#aaa;">--</b></div>`).join('');
+                list.innerHTML = stops.map(s => `<div id="row-${myToken}-${s.seq}" class="stop-row"><span class="stop-name" style="color:#aaa;">載入車站中...</span><b class="stop-eta" style="color:#aaa;">--</b></div>`).join('');
 
                 for (const s of stops) {
                     if (currentEtaToken !== myToken) break;
@@ -306,10 +307,10 @@
                         const stopName = nameData.data.name_tc;
 
                         const stopEtas = allEtas.filter(e => String(e.seq) === String(s.seq) && e.dir === dirLetter && e.eta);
-                        let etaText = 'No ETA';
+                        let etaText = '未有資料';
                         if (stopEtas.length > 0) {
                             const min = Math.round((new Date(stopEtas[0].eta) - new Date()) / 60000);
-                            etaText = min > 0 ? min + ' min' : '即將到達';
+                            etaText = min > 0 ? min + ' 分鐘' : '即將到達';
                         }
                         const row = document.getElementById(`row-${myToken}-${s.seq}`);
                         if(row) row.innerHTML = `<span class="stop-name">${s.seq}. ${stopName}</span><b class="stop-eta" style="color:var(--kmb-red)">${etaText}</b>`;
@@ -329,7 +330,7 @@
                     stops = stopsData.data || [];
                 }
 
-                list.innerHTML = stops.map((s, i) => `<div id="row-${myToken}-${i}" class="stop-row"><span class="stop-name" style="color:#aaa;">Loading Stop...</span><b class="stop-eta" style="color:#aaa;">--</b></div>`).join('');
+                list.innerHTML = stops.map((s, i) => `<div id="row-${myToken}-${i}" class="stop-row"><span class="stop-name" style="color:#aaa;">載入車站中...</span><b class="stop-eta" style="color:#aaa;">--</b></div>`).join('');
 
                 for (let i = 0; i < stops.length; i++) {
                     if (currentEtaToken !== myToken) break;
@@ -343,10 +344,10 @@
                         const etaData = await etaRes.json();
                         const etas = (etaData.data || []).filter(e => e.dir === (dirWord === 'outbound' ? 'O' : 'I') && e.eta);
                         
-                        let etaText = 'No ETA';
+                        let etaText = '未有資料';
                         if (etas.length > 0) {
                             const min = Math.round((new Date(etas[0].eta) - new Date()) / 60000);
-                            etaText = min > 0 ? min + ' min' : '即將到達';
+                            etaText = min > 0 ? min + ' 分鐘' : '即將到達';
                         }
                         const row = document.getElementById(`row-${myToken}-${i}`);
                         if(row) row.innerHTML = `<span class="stop-name">${i+1}. ${stopName}</span><b class="stop-eta" style="color:var(--ctb-blue)">${etaText}</b>`;
@@ -358,24 +359,23 @@
                 const stopsData = await stopsRes.json();
                 const stops = stopsData.stops || [];
 
-                list.innerHTML = stops.map((s, i) => `<div id="row-${myToken}-${i}" class="stop-row"><span class="stop-name" style="color:#aaa;">Loading...</span><b class="stop-eta" style="color:#aaa;">--</b></div>`).join('');
+                list.innerHTML = stops.map((s, i) => `<div id="row-${myToken}-${i}" class="stop-row"><span class="stop-name" style="color:#aaa;">載入車站中...</span><b class="stop-eta" style="color:#aaa;">--</b></div>`).join('');
 
                 for (let i = 0; i < stops.length; i++) {
                     if (currentEtaToken !== myToken) break;
                     const s = stops[i];
                     try {
-                        const stopName = s.stopName_c || s.stopName_tc || "Unknown";
+                        const stopName = s.stopName_c || s.stopName_tc || "未知";
                         const etaRes = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/eta.php?action=list&routeId=${routeId}&stopId=${s.stopId}`);
                         const etaData = await etaRes.json();
                         const etas = etaData.estimatedArrivals || [];
                         
-                        let etaText = '無法獲取資料';
+                        let etaText = '未有資料';
                         if (etas.length > 0) {
-                            // FIX 2: Safely parse NLB string to prevent Safari NaN errors
                             const safeDateStr = etas[0].estimatedArrivalTime.replace(/-/g, '/');
                             const etaTime = new Date(safeDateStr); 
                             const min = Math.round((etaTime - new Date()) / 60000);
-                            etaText = min > 0 ? min + ' min' : (min <= 0 ? '即將到達' : 'No ETA');
+                            etaText = min > 0 ? min + ' 分鐘' : (min <= 0 ? '即將到達' : '未有資料');
                         }
 
                         const row = document.getElementById(`row-${myToken}-${i}`);
@@ -384,7 +384,7 @@
                 }
             }
         } catch(e) {
-            list.innerHTML = '<p style="padding:40px; color:red; text-align:center;">Network error while fetching Live ETA.</p>';
+            list.innerHTML = '<p style="padding:40px; color:red; text-align:center;">網絡錯誤，無法獲取實時到站時間。</p>';
         }
     }
 
