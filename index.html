@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HK Bus App</title>
     
-    <link rel="icon" type="image/png" href="./AppIcon.png?v=2">
-    <link rel="apple-touch-icon" href="./AppIcon.png?v=2">
+    <link rel="icon" type="image/png" href="AppIcon.png">
+    <link rel="apple-touch-icon" href="AppIcon.png">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -25,7 +25,7 @@
 
         body {
             background-color: #000; display: flex; justify-content: center; align-items: center;
-            height: 100dvh; overflow: hidden; /* Fits exact screen height */
+            height: 100dvh; overflow: hidden;
         }
 
         .app-container {
@@ -42,38 +42,33 @@
         .app-header h1 { font-size: 28px; font-weight: 700; color: var(--text-main); }
         .app-header .sub-title { font-size: 13px; color: var(--text-muted); margin-top: 2px;}
 
-        /* Pages use Flex to fill remaining space */
         .page { display: none; flex: 1; flex-direction: column; overflow: hidden; padding-bottom: 65px; }
         .page.active { display: flex; }
         
-        .scrollable-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px; }
+        .scrollable-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px 10px; }
         .scrollable-content::-webkit-scrollbar { display: none; }
 
-        /* --- GPS Nearest Station Box --- */
-        .gps-box {
-            background: linear-gradient(135deg, #ff3b30, #ff2d55); border-radius: 12px;
-            padding: 15px; color: white; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(255, 59, 48, 0.3);
-        }
-        .gps-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: bold; opacity: 0.9; }
-        .gps-station-name { font-size: 20px; font-weight: 800; margin-bottom: 10px; }
-        .gps-eta-row { display: flex; justify-content: space-between; background: rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; align-items: center;}
-        .gps-eta-route { font-size: 16px; font-weight: bold; width: 45px;}
-        .gps-eta-time { font-size: 16px; font-weight: bold; text-align: right;}
+        /* --- Section Titles --- */
+        .section-title { font-size: 18px; font-weight: 700; color: var(--text-main); margin: 5px 5px 10px 5px; }
 
         /* --- Route List --- */
-        .route-list { display: flex; flex-direction: column; gap: 8px; }
+        .route-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
         .route-item {
-            background: var(--box-bg); border-radius: 10px; padding: 15px;
+            background: var(--box-bg); border-radius: 12px; padding: 15px;
             display: flex; align-items: center; gap: 15px; cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         }
-        .route-item:active { opacity: 0.7; }
+        .route-item:active { background: #f9f9f9; transform: scale(0.98); transition: 0.1s; }
         .route-number {
             background: var(--kmb-color); color: #fff; font-size: 18px; font-weight: 800;
-            padding: 5px 10px; border-radius: 6px; min-width: 60px; text-align: center;
+            padding: 6px 10px; border-radius: 8px; min-width: 60px; text-align: center;
         }
         .route-info { flex: 1; }
         .route-dest { font-size: 16px; font-weight: 600; color: var(--text-main); }
-        .route-orig { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+        .route-orig { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        
+        /* Highlight for the nearest station info */
+        .nearest-eta-highlight { color: var(--primary-color); font-weight: 600; font-size: 13px; margin-top: 5px; display: flex; justify-content: space-between;}
 
         /* --- Route Details (Map + Accordion) --- */
         #page-details-header { display: flex; align-items: center; gap: 15px; padding-bottom: 10px; }
@@ -127,17 +122,17 @@
             <p class="sub-title">Hong Kong Live Data</p>
         </div>
         <div class="scrollable-content">
-            <div id="gps-block" class="gps-box">
-                <div class="gps-header">
-                    <span>📍 Locating Nearest Station...</span>
-                </div>
-                <div class="gps-station-name" id="gps-name">Please allow location access</div>
-                <div id="gps-etas"></div>
+            
+            <h3 class="section-title">📍 Nearby Routes</h3>
+            <div class="route-list" id="nearby-routes-list">
+                <p style="text-align:center; padding: 10px; color: var(--text-muted); font-size: 14px;">Locating nearby stations...</p>
             </div>
 
+            <h3 class="section-title">🚌 All Routes</h3>
             <div class="route-list" id="home-route-list">
-                <p style="text-align:center; padding: 20px; color: var(--text-muted);">Loading routes...</p>
+                <p style="text-align:center; padding: 10px; color: var(--text-muted); font-size: 14px;">Loading routes...</p>
             </div>
+            
         </div>
     </div>
 
@@ -206,7 +201,7 @@
         }
     }
 
-    // --- Distance Calculator (Haversine formula) ---
+    // --- Distance Calculator ---
     function getDistance(lat1, lon1, lat2, lon2) {
         const R = 6371; 
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -215,49 +210,61 @@
         return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
     }
 
-    // --- Find Nearest Station & Display ETA ---
-    async function loadNearestStation(userLat, userLon) {
+    // --- Load Nearby Routes (Injected into Route List) ---
+    async function loadNearbyRoutes(userLat, userLon) {
         try {
-            document.querySelector('.gps-header span').innerText = "📍 Finding nearest...";
+            const nearbyList = document.getElementById('nearby-routes-list');
             let res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop');
             let data = await res.json();
             
-            let nearestStop = null;
-            let minVal = Infinity;
+            // Sort all stops by distance
+            let closestStops = data.data.map(stop => ({
+                ...stop, dist: getDistance(userLat, userLon, parseFloat(stop.lat), parseFloat(stop.long))
+            })).sort((a, b) => a.dist - b.dist).slice(0, 3); // Take top 3 closest physical stops
 
-            // Find closest stop
-            data.data.forEach(stop => {
-                let dist = getDistance(userLat, userLon, parseFloat(stop.lat), parseFloat(stop.long));
-                if(dist < minVal) { minVal = dist; nearestStop = stop; }
-            });
+            let nearbyHTML = '';
+            let seenRoutes = new Set();
+            const now = new Date();
 
-            if(nearestStop) {
-                document.querySelector('.gps-header span').innerText = `📍 Nearest Station (${(minVal*1000).toFixed(0)}m)`;
-                document.getElementById('gps-name').innerText = nearestStop.name_tc;
-
-                // Get ETA for this specific stop
-                let etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${nearestStop.stop}`);
+            for(let stop of closestStops) {
+                let etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stop.stop}`);
                 let etaData = await etaRes.json();
                 
-                let activeEtas = etaData.data.filter(e => e.eta).slice(0, 3); // Show top 3 buses
-                const now = new Date();
+                // Process valid ETAs
+                let activeEtas = etaData.data.filter(e => e.eta);
                 
-                if(activeEtas.length > 0) {
-                    document.getElementById('gps-etas').innerHTML = activeEtas.map(item => {
+                activeEtas.forEach(item => {
+                    let uniqueKey = item.route + item.dir + item.dest_tc;
+                    if(!seenRoutes.has(uniqueKey)) {
+                        seenRoutes.add(uniqueKey);
+                        
                         let diffMins = Math.round((new Date(item.eta) - now) / 60000);
                         let timeStr = diffMins <= 0 ? "Arriving" : `${diffMins} min`;
-                        return `<div class="gps-eta-row">
-                                    <div class="gps-eta-route">${item.route}</div>
-                                    <div style="font-size:12px; flex:1;">To ${item.dest_tc}</div>
-                                    <div class="gps-eta-time">${timeStr}</div>
-                                </div>`;
-                    }).join('');
-                } else {
-                    document.getElementById('gps-etas').innerHTML = "<p>No active buses right now.</p>";
-                }
+                        let boundCode = item.dir === 'O' ? 'outbound' : 'inbound'; // Translate direction
+
+                        nearbyHTML += `
+                        <div class="route-item" onclick="openRouteDetails('${item.route}', '${boundCode}', '', '${item.dest_tc}')">
+                            <div class="route-number">${item.route}</div>
+                            <div class="route-info">
+                                <div class="route-dest">往 ${item.dest_tc}</div>
+                                <div class="nearest-eta-highlight">
+                                    <span>📍 ${stop.name_tc}</span>
+                                    <span>${timeStr}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                    }
+                });
             }
+
+            if(nearbyHTML) {
+                nearbyList.innerHTML = nearbyHTML;
+            } else {
+                nearbyList.innerHTML = `<p style="text-align:center; color:#888; font-size: 14px;">No active buses nearby right now.</p>`;
+            }
+
         } catch(e) {
-            document.getElementById('gps-name').innerText = "GPS Error";
+            document.getElementById('nearby-routes-list').innerHTML = `<p style="text-align:center; color:red;">Failed to load location data.</p>`;
         }
     }
 
@@ -265,25 +272,24 @@
     function initMap() {
         if (!map) {
             map = L.map('map', {zoomControl: false}).setView([22.3193, 114.1694], 11);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                maxZoom: 19
-            }).addTo(map);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
         }
-        // Force map to resize correctly when div becomes visible
         setTimeout(() => map.invalidateSize(), 300);
     }
 
     // --- On Load Setup ---
     window.onload = async () => {
-        // Request Location for Nearest Station
+        // Request Location for Nearby Routes List
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
-                (pos) => loadNearestStation(pos.coords.latitude, pos.coords.longitude),
-                () => document.getElementById('gps-name').innerText = "Location access denied"
+                (pos) => loadNearbyRoutes(pos.coords.latitude, pos.coords.longitude),
+                () => document.getElementById('nearby-routes-list').innerHTML = "<p style='text-align:center; color:#888; font-size:14px;'>Location access denied. Cannot show nearby routes.</p>"
             );
+        } else {
+            document.getElementById('nearby-routes-list').innerHTML = "<p style='text-align:center; color:#888;'>GPS not supported</p>";
         }
 
-        // Load Routes List
+        // Load All Routes List (Fallback)
         try {
             const res = await fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/');
             const data = await res.json();
@@ -291,9 +297,12 @@
                 let seen = new Set();
                 let uniqueRoutes = data.data.filter(r => { if (seen.has(r.route)) return false; seen.add(r.route); return true; }).slice(0, 100); 
                 document.getElementById('home-route-list').innerHTML = uniqueRoutes.map(r => `
-                    <div class="route-item" onclick="openRouteDetails('${r.route}', '${r.bound}', '${r.orig_tc}', '${r.dest_tc}')">
+                    <div class="route-item" onclick="openRouteDetails('${r.route}', '${r.bound === 'O' ? 'outbound' : 'inbound'}', '${r.orig_tc}', '${r.dest_tc}')">
                         <div class="route-number">${r.route}</div>
-                        <div class="route-info"><div class="route-dest">往 ${r.dest_tc}</div><div class="route-orig">由 ${r.orig_tc}</div></div>
+                        <div class="route-info">
+                            <div class="route-dest">往 ${r.dest_tc}</div>
+                            <div class="route-orig">由 ${r.orig_tc}</div>
+                        </div>
                     </div>`).join('');
             }
         } catch(e) {}
@@ -309,11 +318,11 @@
         const container = document.getElementById('station-list-container');
         container.innerHTML = `<p style="padding: 20px; text-align: center;">Loading stations...</p>`;
 
-        initMap(); // Ensure map is ready
+        initMap(); 
 
         try {
-            let direction = bound === 'O' ? 'outbound' : 'inbound';
-            let stopRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${direction}/1`);
+            // "bound" is now explicitly passed as 'inbound' or 'outbound' to prevent bugs
+            let stopRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/1`);
             let stops = (await stopRes.json()).data;
 
             let etaRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-eta/${route}/1`);
@@ -343,22 +352,18 @@
                         let nameJson = await nameRes.json();
                         globalStopNames[stop.stop] = nameJson.data.name_tc;
                         
-                        // Collect coordinates for Map Line
                         let lat = parseFloat(nameJson.data.lat);
                         let lng = parseFloat(nameJson.data.long);
                         latlngs.push([lat, lng]);
 
-                        // Add small circle markers for stops
                         let marker = L.circleMarker([lat, lng], { radius: 4, color: '#ff3b30', fillOpacity: 1 }).addTo(map);
                         marker.bindPopup(globalStopNames[stop.stop]);
                         stopMarkers.push(marker);
-
                     } catch(e) { globalStopNames[stop.stop] = "Unknown Station"; }
                 }
                 document.getElementById(`stop-name-${stop.stop}`).innerText = globalStopNames[stop.stop];
             }
 
-            // Draw line connecting stops and zoom map to fit
             if(latlngs.length > 0) {
                 routePolyline = L.polyline(latlngs, {color: '#ff3b30', weight: 4}).addTo(map);
                 map.fitBounds(routePolyline.getBounds(), {padding: [20, 20]});
@@ -395,7 +400,7 @@
         let res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route/`);
         let matches = (await res.json()).data.filter(r => r.route === route);
         resDiv.innerHTML = matches.length > 0 ? matches.map(r => `
-            <div class="route-item" onclick="openRouteDetails('${r.route}', '${r.bound}', '${r.orig_tc}', '${r.dest_tc}')">
+            <div class="route-item" onclick="openRouteDetails('${r.route}', '${r.bound === 'O' ? 'outbound' : 'inbound'}', '${r.orig_tc}', '${r.dest_tc}')">
                 <div class="route-number">${r.route}</div>
                 <div class="route-info"><div class="route-dest">往 ${r.dest_tc}</div></div>
             </div>`).join('') : "<p style='text-align:center;'>Not found</p>";
