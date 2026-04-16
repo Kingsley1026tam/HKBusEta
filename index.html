@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HK Bus ETA</title>
+    <title>HK Bus App</title>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     
@@ -13,442 +13,315 @@
             --nav-bg: #1c1c1c; 
             --active-color: #df8555; 
             --text-color: #333;
-            --card-bg: #fff;
+            /* Company Colors */
+            --kmb-color: #ed1d24;
+            --ctb-color: #fccc0a;
+            --ctb-text: #00558e;
+            --nlb-color: #007a61;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
         body {
             background-color: var(--bg-color);
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100dvh; 
+            height: 100dvh; 
             overflow: hidden; 
         }
 
         .app-container {
-            width: 100%;
-            max-width: 400px;
-            height: 100dvh; 
-            max-height: 850px;
+            width: 100%; max-width: 400px; height: 100dvh;
             background-color: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            position: relative;
+            display: flex; flex-direction: column; position: relative;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
-        .content {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            padding: 20px 20px 0 20px;
-            overflow: hidden; 
+        /* --- Pages --- */
+        .page {
+            display: none; flex: 1; flex-direction: column;
+            padding: 20px; overflow-y: auto; overflow-x: hidden;
+            padding-bottom: 80px; /* Space for nav */
         }
+        .page.active { display: flex; }
+        
+        /* Hide scrollbar */
+        .page::-webkit-scrollbar { display: none; }
+        .page { -ms-overflow-style: none; scrollbar-width: none; }
 
-        h1 {
-            color: var(--text-color);
-            margin-bottom: 15px;
-            font-size: 24px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        h1 { font-size: 24px; margin-bottom: 15px; color: var(--text-color); }
+        .sub-title { font-size: 14px; color: #666; margin-top: -10px; margin-bottom: 20px;}
 
-        .back-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--nav-bg);
-            display: flex;
-            align-items: center;
-            padding: 5px;
-        }
-
-        .search-box {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 15px;
-            flex-shrink: 0; 
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            outline: none;
-            font-size: 16px;
-            text-transform: uppercase;
-        }
-
-        /* Scrollable Area */
-        .scroll-area {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 60px; 
-            -ms-overflow-style: none;  
-            scrollbar-width: none;  
-        }
-        .scroll-area::-webkit-scrollbar { display: none; }
-
-        /* View toggling */
-        #view-home, #view-stations { display: none; height: 100%; flex-direction: column; }
-        #view-home.active, #view-stations.active { display: flex; }
-
-        /* Route Card */
+        /* --- Route Cards (Two Directions) --- */
         .route-card {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            background: #fff; border-radius: 15px; padding: 10px;
+            margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-
-        .route-title {
-            font-size: 22px;
-            font-weight: bold;
-            color: var(--active-color);
-            margin-bottom: 10px;
-            text-align: center;
+        .route-header {
+            font-size: 20px; font-weight: bold; margin-bottom: 10px;
+            padding-bottom: 5px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;
         }
-
-        .direction-btn {
-            width: 100%;
-            padding: 12px;
-            background: #f8f8f8;
-            color: var(--text-color);
-            border: 1px solid #eee;
-            border-radius: 10px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: 8px;
-            text-align: left;
-            transition: 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .company-badge {
+            font-size: 12px; padding: 3px 8px; border-radius: 10px; color: white;
         }
-
-        .direction-btn:active { background: #e0e0e0; }
-
-        /* Station Card (Accordion) */
-        .station-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            overflow: hidden;
+        .direction-box {
+            padding: 12px; border-radius: 10px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            color: white; font-weight: bold;
         }
+        .direction-box:last-child { margin-bottom: 0; }
+        .stop-name { font-size: 14px; font-weight: normal; opacity: 0.9; }
+        .eta-time { font-size: 22px; }
 
-        .station-header {
-            padding: 15px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 500;
+        /* Company Backgrounds */
+        .bg-kmb { background-color: var(--kmb-color); }
+        .bg-ctb { background-color: var(--ctb-color); color: var(--ctb-text); }
+        .bg-nlb { background-color: var(--nlb-color); }
+        .bg-joint { background: linear-gradient(135deg, var(--kmb-color) 50%, var(--ctb-color) 50%); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+
+        /* --- Custom Keyboard --- */
+        .search-display {
+            background: #fff; padding: 15px; border-radius: 15px; font-size: 28px;
+            text-align: center; font-weight: bold; margin-bottom: 20px; min-height: 60px;
+            letter-spacing: 2px;
         }
-
-        .station-header .seq {
-            color: var(--active-color);
-            font-weight: bold;
-            margin-right: 10px;
+        .keyboard {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
         }
-
-        /* The expandable box */
-        .eta-box {
-            display: none;
-            background: #fafafa;
-            border-top: 1px solid #eee;
-            padding: 15px;
+        .key {
+            background: #fff; border: none; padding: 20px; border-radius: 15px;
+            font-size: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer; transition: 0.1s;
         }
+        .key:active { background: #e0e0e0; transform: scale(0.95); }
+        .key.action { background: var(--active-color); color: white; }
 
-        .eta-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dashed #ddd;
-        }
-        .eta-item:last-child { border-bottom: none; }
-        .eta-time { color: var(--active-color); font-weight: bold; }
-
-        /* Navigation Bar UI */
+        /* --- Navigation --- */
         .nav-container {
-            padding: 0 20px 20px 20px;
-            flex-shrink: 0; 
-            background-color: var(--bg-color); 
-            z-index: 10;
+            position: absolute; bottom: 0; width: 100%; padding: 0 20px 20px 20px;
+            background: transparent; z-index: 10;
         }
-
         .nav-bar {
-            position: relative;
-            background: var(--nav-bg);
-            height: 70px;
-            border-radius: 25px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 0 10px;
+            position: relative; background: var(--nav-bg); height: 70px;
+            border-radius: 25px; display: flex; justify-content: space-around; align-items: center;
         }
-
         .nav-item {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2;
-            cursor: pointer;
-            color: #888;
-            transition: 0.3s;
-            font-size: 24px;
+            width: 60px; height: 60px; display: flex; justify-content: center; align-items: center;
+            z-index: 2; cursor: pointer; color: #888; transition: 0.3s; font-size: 24px;
         }
-
         .nav-item.active { color: #fff; transform: translateY(-22px); }
-
         .indicator {
-            position: absolute;
-            top: -22px;
-            width: 60px;
-            height: 60px;
-            background: var(--active-color);
-            border-radius: 50%;
-            border: 8px solid var(--bg-color); 
-            transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 1;
+            position: absolute; top: -22px; width: 60px; height: 60px;
+            background: var(--active-color); border-radius: 50%;
+            border: 8px solid var(--bg-color); transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 1;
         }
-
-        .loading-text { text-align: center; color: #888; padding: 20px; }
-
     </style>
 </head>
 <body>
 
 <div class="app-container">
     
-    <div class="content active" id="view-home">
-        <h1>All Routes</h1>
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Search route (e.g., 1A, 98D)..." oninput="filterRoutes()">
-        </div>
-        <div class="scroll-area" id="route-list">
-            <div class="loading-text">Loading KMB Routes...</div>
+    <div id="page-home" class="page active">
+        <h1>My Routes</h1>
+        <p class="sub-title">Nearest arrival times</p>
+        <div id="home-routes">
+            <p style="text-align: center; color: #888; margin-top: 50px;">Go to Search to find a route!</p>
         </div>
     </div>
 
-    <div class="content" id="view-stations">
-        <h1>
-            <button class="back-btn" onclick="showHome()"><ion-icon name="arrow-back-outline"></ion-icon></button>
-            <span id="station-title">Route 1A</span>
-        </h1>
-        <div class="scroll-area" id="station-list">
-            </div>
+    <div id="page-search" class="page">
+        <h1>Search Route</h1>
+        <p class="sub-title">Find ETA by Route Number</p>
+        
+        <div class="search-display" id="searchInput"></div>
+        
+        <div class="keyboard">
+            <button class="key" onclick="typeKey('1')">1</button>
+            <button class="key" onclick="typeKey('2')">2</button>
+            <button class="key" onclick="typeKey('3')">3</button>
+            <button class="key" onclick="typeKey('4')">4</button>
+            <button class="key" onclick="typeKey('5')">5</button>
+            <button class="key" onclick="typeKey('6')">6</button>
+            <button class="key" onclick="typeKey('7')">7</button>
+            <button class="key" onclick="typeKey('8')">8</button>
+            <button class="key" onclick="typeKey('9')">9</button>
+            <button class="key" onclick="typeKey('X')">X</button>
+            <button class="key" onclick="typeKey('0')">0</button>
+            <button class="key" onclick="typeKey('A')">A</button>
+            <button class="key action" onclick="clearKey()">CLR</button>
+            <button class="key" onclick="typeKey('B')">B</button>
+            <button class="key action" onclick="searchRoute()">GO</button>
+        </div>
+        <p id="search-status" style="text-align:center; margin-top: 15px; font-weight:bold;"></p>
+    </div>
+
+    <div id="page-settings" class="page">
+        <h1>Settings</h1>
+        <p class="sub-title">App Preferences</p>
+        <div class="route-card">
+            <p><strong>Language:</strong> English</p>
+            <hr style="margin:10px 0; border:0; border-top:1px solid #eee;">
+            <p><strong>Theme:</strong> Light (Peachy)</p>
+            <hr style="margin:10px 0; border:0; border-top:1px solid #eee;">
+            <p><strong>Clear Saved Routes:</strong> <button onclick="clearHome()" style="padding:5px; border-radius:5px; border:none; background:#ff4d4d; color:white;">Clear</button></p>
+        </div>
     </div>
 
     <div class="nav-container">
         <div class="nav-bar">
             <div class="indicator" id="indicator"></div>
-            <div class="nav-item active" onclick="moveIndicator(0, this)"><ion-icon name="home-outline"></ion-icon></div>
-            <div class="nav-item" onclick="moveIndicator(1, this)"><ion-icon name="pie-chart-outline"></ion-icon></div>
-            <div class="nav-item" onclick="moveIndicator(2, this)"><ion-icon name="time-outline"></ion-icon></div>
-            <div class="nav-item" onclick="moveIndicator(3, this)"><ion-icon name="notifications-outline"></ion-icon></div>
+            <div class="nav-item active" onclick="switchPage('home', 0, this)"><ion-icon name="home-outline"></ion-icon></div>
+            <div class="nav-item" onclick="switchPage('search', 1, this)"><ion-icon name="search-outline"></ion-icon></div>
+            <div class="nav-item" onclick="switchPage('settings', 2, this)"><ion-icon name="settings-outline"></ion-icon></div>
         </div>
     </div>
 </div>
 
 <script>
-    // --- Global Data Store ---
-    let allRoutes = {}; // Grouped by route number
-    let routeArray = []; // For searching
-    let stopsCache = {}; // Map stop_id to station name
-
-    // --- Initialization ---
-    window.onload = async () => {
-        const activeItem = document.querySelector('.nav-item.active');
-        moveIndicator(0, activeItem);
-        
-        // 1. Fetch all stops and cache them (so we can translate stop_id to text)
-        fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop')
-            .then(res => res.json())
-            .then(data => {
-                data.data.forEach(stop => stopsCache[stop.stop] = stop.name_tc);
-            });
-
-        // 2. Fetch all routes
-        fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/')
-            .then(res => res.json())
-            .then(data => {
-                // Group inbound/outbound into the same route number
-                data.data.forEach(r => {
-                    if (!allRoutes[r.route]) allRoutes[r.route] = [];
-                    allRoutes[r.route].push(r);
-                });
-                routeArray = Object.keys(allRoutes);
-                renderRoutes(routeArray); // Render initially
-            });
-    };
-
-    // --- View Toggles ---
-    function showHome() {
-        document.getElementById('view-stations').classList.remove('active');
-        document.getElementById('view-home').classList.add('active');
-    }
-
-    function showStationsView(routeStr, titleDesc) {
-        document.getElementById('station-title').innerText = `${routeStr} - ${titleDesc}`;
-        document.getElementById('view-home').classList.remove('active');
-        document.getElementById('view-stations').classList.add('active');
-        document.getElementById('station-list').innerHTML = '<div class="loading-text">Loading stations...</div>';
-    }
-
-    // --- Route Logic (Homepage) ---
-    function renderRoutes(routesToRender) {
-        const list = document.getElementById('route-list');
-        list.innerHTML = '';
-
-        // Limit to 20 visually until user searches, to prevent browser freeze
-        const limitedRoutes = routesToRender.slice(0, 30);
-
-        if (limitedRoutes.length === 0) {
-            list.innerHTML = '<div class="loading-text">No routes found.</div>';
-            return;
-        }
-
-        limitedRoutes.forEach(routeNum => {
-            const directions = allRoutes[routeNum];
-            let buttonsHtml = '';
-            
-            directions.forEach(dir => {
-                // dir.bound is 'I' or 'O', pass it to the onclick handler
-                buttonsHtml += `
-                    <button class="direction-btn" onclick="openRoute('${dir.route}', '${dir.bound === 'I' ? 'inbound' : 'outbound'}', '${dir.dest_tc}')">
-                        To: ${dir.dest_tc}
-                        <ion-icon name="chevron-forward-outline"></ion-icon>
-                    </button>
-                `;
-            });
-
-            list.innerHTML += `
-                <div class="route-card">
-                    <div class="route-title">${routeNum}</div>
-                    ${buttonsHtml}
-                </div>
-            `;
-        });
-    }
-
-    function filterRoutes() {
-        const query = document.getElementById('searchInput').value.trim().toUpperCase();
-        if (query === '') {
-            renderRoutes(routeArray);
-        } else {
-            const filtered = routeArray.filter(r => r.includes(query));
-            renderRoutes(filtered);
-        }
-    }
-
-    // --- Station Logic (Second Page) ---
-    async function openRoute(route, boundText, destination) {
-        showStationsView(route, `To ${destination}`);
-        
-        try {
-            // Fetch stops for this specific route and direction
-            const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${boundText}/1`);
-            const data = await res.json();
-            
-            const list = document.getElementById('station-list');
-            list.innerHTML = '';
-
-            data.data.forEach(stopItem => {
-                const stopName = stopsCache[stopItem.stop] || `Stop ID: ${stopItem.stop}`;
-                
-                list.innerHTML += `
-                    <div class="station-card">
-                        <div class="station-header" onclick="toggleETA(this, '${stopItem.stop}', '${route}', '${boundText === 'inbound' ? 'I' : 'O'}')">
-                            <div><span class="seq">${stopItem.seq}</span> ${stopName}</div>
-                            <ion-icon name="chevron-down-outline"></ion-icon>
-                        </div>
-                        <div class="eta-box">Loading...</div>
-                    </div>
-                `;
-            });
-        } catch (error) {
-            document.getElementById('station-list').innerHTML = `<div class="loading-text">Error loading stations.</div>`;
-        }
-    }
-
-    // --- ETA Accordion Logic ---
-    async function toggleETA(headerElem, stopId, route, dirIndicator) {
-        const thisBox = headerElem.nextElementSibling;
-        const allBoxes = document.querySelectorAll('.eta-box');
-
-        // 1. Close all other boxes (Accordion effect)
-        allBoxes.forEach(box => {
-            if (box !== thisBox) box.style.display = 'none';
-        });
-
-        // 2. Toggle current box
-        if (thisBox.style.display === 'block') {
-            thisBox.style.display = 'none';
-        } else {
-            thisBox.style.display = 'block';
-            thisBox.innerHTML = '<div class="loading-text" style="padding: 5px;">Fetching 3 buses...</div>';
-            
-            // Fetch ETA for this specific stop
-            try {
-                const res = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/eta/${stopId}/${route}/1`);
-                const data = await res.json();
-                
-                // Filter by direction (I/O) and make sure there is an ETA
-                const validBuses = data.data.filter(b => b.dir === dirIndicator && b.eta);
-                
-                // Limit to EXACTLY 3 buses
-                const topThree = validBuses.slice(0, 3);
-
-                if (topThree.length === 0) {
-                    thisBox.innerHTML = '<div style="text-align:center; color:#888;">No buses scheduled.</div>';
-                    return;
-                }
-
-                thisBox.innerHTML = topThree.map((bus, index) => {
-                    // Calculate minutes from now, or just show time
-                    const etaTime = new Date(bus.eta).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    
-                    return `
-                        <div class="eta-item">
-                            <span>Bus ${index + 1}</span>
-                            <span class="eta-time">${etaTime}</span>
-                        </div>
-                    `;
-                }).join('');
-
-            } catch(e) {
-                thisBox.innerHTML = '<div style="color:red; text-align:center;">Failed to fetch ETA.</div>';
-            }
-        }
-    }
-
-    // --- UI Navigation Logic ---
-    function moveIndicator(index, element) {
+    // --- Navigation & Page Switching ---
+    function switchPage(pageId, index, element) {
+        // Move Indicator
         const navItems = document.querySelectorAll('.nav-item');
-        const indicator = document.getElementById('indicator');
-        
         navItems.forEach(item => item.classList.remove('active'));
         element.classList.add('active');
+        document.getElementById('indicator').style.left = `${element.offsetLeft}px`;
 
-        const offset = element.offsetLeft;
-        indicator.style.left = `${offset}px`;
+        // Switch Page Visibility
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+        document.getElementById(`page-${pageId}`).classList.add('active');
+    }
+
+    // Initialize nav position on load
+    window.onload = () => {
+        const activeItem = document.querySelector('.nav-item.active');
+        document.getElementById('indicator').style.left = `${activeItem.offsetLeft}px`;
+    };
+
+    // --- Custom Keyboard Logic ---
+    let currentInput = "";
+    function typeKey(val) {
+        if(currentInput.length < 5) {
+            currentInput += val;
+            document.getElementById('searchInput').innerText = currentInput;
+        }
+    }
+    function clearKey() {
+        currentInput = "";
+        document.getElementById('searchInput').innerText = "";
+        document.getElementById('search-status').innerText = "";
+    }
+    function clearHome() {
+        document.getElementById('home-routes').innerHTML = '<p style="text-align: center; color: #888; margin-top: 50px;">Go to Search to find a route!</p>';
+        alert('Home cleared!');
+    }
+
+    // --- Bus API Logic ---
+    async function searchRoute() {
+        const route = currentInput;
+        if (!route) return;
+
+        const statusLabel = document.getElementById('search-status');
+        statusLabel.innerText = "Searching KMB & CTB...";
+        statusLabel.style.color = "var(--active-color)";
+
+        try {
+            // Check KMB and CTB concurrently
+            const [kmbRes, ctbRes] = await Promise.all([
+                fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-eta/${route}/1`).then(r => r.json()).catch(() => null),
+                fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-eta/CTB/${route}`).then(r => r.json()).catch(() => null)
+            ]);
+
+            let hasKmb = kmbRes && kmbRes.data && kmbRes.data.length > 0;
+            let hasCtb = ctbRes && ctbRes.data && ctbRes.data.length > 0;
+
+            if (!hasKmb && !hasCtb) {
+                statusLabel.innerText = "Route not found.";
+                statusLabel.style.color = "red";
+                return;
+            }
+
+            // Determine Company / Joint Status
+            let companyClass = "bg-joint";
+            let companyName = "Joint Route";
+            if (hasKmb && !hasCtb) { companyClass = "bg-kmb"; companyName = "KMB"; }
+            else if (!hasKmb && hasCtb) { companyClass = "bg-ctb"; companyName = "CTB"; }
+
+            // Aggregate Data: We want the soonest ETA for Outbound (I) and Inbound (O)
+            let dir1 = { dest: "Unknown", eta: 999, stopName: "" };
+            let dir2 = { dest: "Unknown", eta: 999, stopName: "" };
+
+            // Helper to process ETAs
+            const processData = (dataList) => {
+                const now = new Date();
+                dataList.forEach(item => {
+                    if (!item.eta) return;
+                    let etaTime = new Date(item.eta);
+                    let diffMins = Math.round((etaTime - now) / 60000);
+                    if (diffMins < 0) return;
+
+                    // Group by direction (I or O, Outbound/Inbound)
+                    let destName = item.dest_tc || item.dest_en;
+                    if (item.dir === 'O') {
+                        if (diffMins < dir1.eta) {
+                            dir1.eta = diffMins;
+                            dir1.dest = destName;
+                            dir1.stopName = "Nearest Station"; // Simplified without GPS
+                        }
+                    } else if (item.dir === 'I') {
+                        if (diffMins < dir2.eta) {
+                            dir2.eta = diffMins;
+                            dir2.dest = destName;
+                            dir2.stopName = "Nearest Station";
+                        }
+                    }
+                });
+            };
+
+            if (hasKmb) processData(kmbRes.data);
+            if (hasCtb) processData(ctbRes.data); // CTB returns similar structure for ETAs
+
+            // Build HTML Blocks
+            let html = `
+                <div class="route-card">
+                    <div class="route-header">
+                        <span>Route ${route}</span>
+                        <span class="company-badge ${companyClass}">${companyName}</span>
+                    </div>
+            `;
+
+            if (dir1.eta !== 999) html += createDirectionBox(dir1, companyClass);
+            if (dir2.eta !== 999) html += createDirectionBox(dir2, companyClass);
+
+            html += `</div>`;
+
+            // Append to Home Page
+            const homeDiv = document.getElementById('home-routes');
+            if(homeDiv.innerHTML.includes("Go to Search")) homeDiv.innerHTML = "";
+            homeDiv.innerHTML = html + homeDiv.innerHTML; // Add to top
+
+            // Clear search and switch to home automatically
+            clearKey();
+            switchPage('home', 0, document.querySelectorAll('.nav-item')[0]);
+
+        } catch (error) {
+            statusLabel.innerText = "Error fetching data.";
+            statusLabel.style.color = "red";
+            console.error(error);
+        }
+    }
+
+    function createDirectionBox(dirObj, bgClass) {
+        let timeStr = dirObj.eta === 0 ? "Arriving" : `${dirObj.eta} min`;
+        return `
+            <div class="direction-box ${bgClass}">
+                <div>
+                    <div>To ${dirObj.dest}</div>
+                    <div class="stop-name">via ${dirObj.stopName}</div>
+                </div>
+                <div class="eta-time">${timeStr}</div>
+            </div>
+        `;
     }
 </script>
 
