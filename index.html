@@ -223,7 +223,7 @@
         if(favHTML) {
             list.innerHTML = favHTML;
         } else {
-            list.innerHTML = '<p style="padding:10px; color:#888; font-size: 13px;">No favorites yet. Open a route and click "Save"!</p>';
+            list.innerHTML = '<p style="padding:10px; color:#888; font-size: 13px;">無已儲存路線</p>';
         }
     }
 
@@ -309,7 +309,7 @@
                         let etaText = 'No ETA';
                         if (stopEtas.length > 0) {
                             const min = Math.round((new Date(stopEtas[0].eta) - new Date()) / 60000);
-                            etaText = min > 0 ? min + ' min' : 'Arriving';
+                            etaText = min > 0 ? min + ' min' : '即將到達';
                         }
                         const row = document.getElementById(`row-${myToken}-${s.seq}`);
                         if(row) row.innerHTML = `<span class="stop-name">${s.seq}. ${stopName}</span><b class="stop-eta" style="color:var(--kmb-red)">${etaText}</b>`;
@@ -375,7 +375,7 @@
                             const safeDateStr = etas[0].estimatedArrivalTime.replace(/-/g, '/');
                             const etaTime = new Date(safeDateStr); 
                             const min = Math.round((etaTime - new Date()) / 60000);
-                            etaText = min > 0 ? min + ' min' : (min <= 0 ? 'Arriving' : 'No ETA');
+                            etaText = min > 0 ? min + ' min' : (min <= 0 ? '即將到達' : 'No ETA');
                         }
 
                         const row = document.getElementById(`row-${myToken}-${i}`);
