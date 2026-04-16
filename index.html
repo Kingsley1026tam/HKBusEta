@@ -160,37 +160,45 @@
         if(id !== 'details') document.getElementById('tab-' + id).classList.add('active');
     }
 
-    // --- Resilient Route Loader (Fixes the Stuck Loading issue) ---
+    // --- Bulletproof Route Loader ---
     async function loadDatabase() {
         try {
-            // We use Promise.allSettled so if ONE fails, the rest still load!
+            // Updated to the NEW Data.gov.hk V2 APIs!
             const fetchKMB = fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/').then(r => r.json());
-            const fetchCTB = fetch('https://rt.data.gov.hk/v1/transport/citybus-nwfb/route/ctb').then(r => r.json());
-            const fetchNLB = fetch('https://rt.data.gov.hk/v1/transport/nlb/route.php?action=list').then(r => r.json());
+            const fetchCTB = fetch('https://rt.data.gov.hk/v2/transport/citybus/route/ctb').then(r => r.json());
+            const fetchNLB = fetch('https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list').then(r => r.json());
 
             const results = await Promise.allSettled([fetchKMB, fetchCTB, fetchNLB]);
-
             const [kmbRes, ctbRes, nlbRes] = results;
 
-            // Load KMB/LWB if successful
-            if (kmbRes.status === 'fulfilled' && kmbRes.value.data) {
+            // Load KMB/LWB with safety checks
+            if (kmbRes.status === 'fulfilled' && kmbRes.value?.data) {
                 kmbRes.value.data.forEach(r => {
+                    if(!r.route) return;
                     const isLWB = ['A','E','NA','R','S','X'].some(p => r.route.startsWith(p));
-                    allRoutesStore.push({ no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'KMB/LWB', badge: isLWB ? 'badge-lwb' : 'badge-kmb', dir: r.bound });
+                    allRoutesStore.push({ no: r.route, dest: r.dest_tc || "Unknown", orig: r.orig_tc || "Unknown", co: 'KMB/LWB', badge: isLWB ? 'badge-lwb' : 'badge-kmb', dir: r.bound || '1' });
                 });
             }
 
-            // Load CTB if successful
-            if (ctbRes.status === 'fulfilled' && ctbRes.value.data) {
+            // Load CTB with safety checks
+            if (ctbRes.status === 'fulfilled' && ctbRes.value?.data) {
                 ctbRes.value.data.forEach(r => {
-                    allRoutesStore.push({ no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'CTB', badge: 'badge-ctb', dir: r.dir });
+                    if(!r.route) return;
+                    allRoutesStore.push({ no: r.route, dest: r.dest_tc || "Unknown", orig: r.orig_tc || "Unknown", co: 'CTB', badge: 'badge-ctb', dir: r.dir || 'inward' });
                 });
             }
 
-            // Load NLB if successful
-            if (nlbRes.status === 'fulfilled' && nlbRes.value.routes) {
+            // Load NLB with safety checks (Fixed routeName_c error)
+            if (nlbRes.status === 'fulfilled' && nlbRes.value?.routes) {
                 nlbRes.value.routes.forEach(r => {
-                    allRoutesStore.push({ no: r.routeNo, dest: r.routeName_tc.split('>')[1] || r.routeName_tc, orig: r.routeName_tc.split('>')[0], co: 'NLB', badge: 'badge-nlb', dir: '1' });
+                    if(!r.routeNo) return;
+                    // NLB changed their API property from routeName_tc to routeName_c!
+                    const rawName = r.routeName_c || r.routeName_tc || r.routeName_e || "Unknown>Unknown";
+                    const nameParts = rawName.split('>');
+                    const dest = nameParts[1] || nameParts[0] || "Unknown";
+                    const orig = nameParts[0] || "Unknown";
+                    
+                    allRoutesStore.push({ no: r.routeNo, dest: dest, orig: orig, co: 'NLB', badge: 'badge-nlb', dir: '1' });
                 });
             }
 
@@ -199,12 +207,12 @@
             if (allRoutesStore.length > 0) {
                 allList.innerHTML = allRoutesStore.slice(0, 50).map(r => renderItem(r)).join('');
             } else {
-                allList.innerHTML = '<p style="padding:10px; color:red;">Failed to connect to government servers. Please check your internet.</p>';
+                allList.innerHTML = '<p style="padding:10px; color:red;">Failed to fetch from government APIs.</p>';
             }
 
         } catch (e) {
             console.error("Database failed", e);
-            document.getElementById('all-routes-list').innerHTML = '<p style="padding:10px; color:red;">System Error. Please refresh the page.</p>';
+            document.getElementById('all-routes-list').innerHTML = '<p style="padding:10px; color:red;">System Error. ' + e.message + '</p>';
         }
     }
 
@@ -232,7 +240,6 @@
     async function initNearby(lat, lon) {
         const nearbyDiv = document.getElementById('nearby-list');
         try {
-            // Quick fallback text for nearby routes (expand this later with real coordinates logic)
             if(allRoutesStore.length > 0) {
                  nearbyDiv.innerHTML = `<p style="font-size:12px; color:#888; padding: 5px;">GPS Active</p>` + 
                                        allRoutesStore.slice(10, 15).map(r => renderItem(r)).join('');
@@ -282,7 +289,7 @@
     window.onload = () => {
         loadDatabase();
         navigator.geolocation.getCurrentPosition(
-            p => setTimeout(() => initNearby(p.coords.latitude, p.coords.longitude), 1000), // Delay slightly so routes store is populated
+            p => setTimeout(() => initNearby(p.coords.latitude, p.coords.longitude), 1000), 
             e => { document.getElementById('nearby-list').innerHTML = '<p style="font-size:12px; color:#888; padding:10px;">Location access denied.</p>'; }
         );
     };
