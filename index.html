@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>香港巴士 Plus - Pro</title>
+    <title>HK-Bus ETA - Pro</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -11,8 +11,8 @@
         :root {
             --app-bg: #f2f2f6; --box-bg: #ffffff; --text-main: #000000;
             --text-muted: #8e8e93; --kmb-red: #d0202e; --highlight-blue: #007aff;
-            --nav-bg: #1a1a1a; /* 導航欄底色 */
-            --nav-circle: #e67e22; /* 選中圓圈顏色 */
+            --nav-bg: #ffffff; /* 改為白色背景 */
+            --nav-circle: #ff3b30; /* 改為紅色圓圈 */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, system-ui, "PingFang HK", sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -43,29 +43,32 @@
         .route-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
         
         .route-right { min-width: 70px; text-align: right; }
-        .nearest-eta { font-size: 18px; font-weight: 800; color: var(--kmb-red); }
-        .nearest-desc { font-size: 10px; color: var(--text-muted); }
 
-        /* 導航欄 - 仿圖中樣式 */
+        /* 導航欄 - 樣式修正 */
         .bottom-nav { 
-            position: absolute; bottom: 15px; left: 15px; right: 15px; 
+            position: absolute; bottom: 20px; left: 15px; right: 15px; 
             height: 70px; background: var(--nav-bg); border-radius: 25px; 
             display: flex; justify-content: space-around; align-items: center; z-index: 1000;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            /* 加入強化的陰影 */
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.05);
         }
         .nav-tab { position: relative; width: 60px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; cursor: pointer; transition: 0.5s; }
-        .nav-tab svg { width: 26px; height: 26px; fill: #fff; opacity: 0.5; transition: 0.5s; }
-        .nav-tab span { position: absolute; color: #fff; font-size: 10px; font-weight: 600; opacity: 0; transform: translateY(20px); transition: 0.5s; }
         
-        .nav-tab.active svg { transform: translateY(-32px); opacity: 1; fill: #fff; }
-        .nav-tab.active span { opacity: 1; transform: translateY(10px); }
+        /* 非活動狀態圖標為灰色 */
+        .nav-tab svg { width: 26px; height: 26px; fill: #8e8e93; transition: 0.5s; }
+        .nav-tab span { position: absolute; color: var(--text-muted); font-size: 10px; font-weight: 700; opacity: 0; transform: translateY(20px); transition: 0.5s; }
+        
+        /* 活動狀態：圖標上移並變白，文字出現 */
+        .nav-tab.active svg { transform: translateY(-32px); fill: #fff; }
+        .nav-tab.active span { opacity: 1; transform: translateY(12px); color: var(--nav-circle); }
 
-        /* 選中時的凹陷圓圈 */
+        /* 導航指示圓圈 */
         .nav-indicator {
             position: absolute; top: -50%; width: 60px; height: 60px;
             background: var(--nav-circle); border-radius: 50%;
-            border: 6px solid var(--app-bg); transition: 0.5s;
-            left: 22px; /* 修改這裡來對齊首頁 */
+            border: 6px solid var(--app-bg); 
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px rgba(255, 59, 48, 0.3); /* 紅色圓圈的發光陰影 */
         }
 
         /* 詳情頁樣式 */
@@ -81,7 +84,7 @@
         .stop-container.expanded .stop-details { display: block; }
         .eta-line { margin-top: 8px; font-size: 13px; color: #444; padding-left: 10px; border-left: 3px solid #ddd; }
 
-        /* 搜尋框 */
+        /* 搜尋框樣式簡化 */
         .search-box { padding: 0 15px 15px 15px; }
         .search-input-wrapper { display: flex; background: #e3e3e8; border-radius: 12px; padding: 12px; align-items: center; }
         .search-input-wrapper input { flex: 1; border: none; background: transparent; font-size: 16px; outline: none; margin-left: 10px; }
@@ -106,11 +109,11 @@
         <div class="search-box">
             <div class="search-input-wrapper">
                 <svg viewBox="0 0 24 24" width="20" fill="#8e8e93"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <input type="text" id="searchInput" placeholder="搜尋路線 (例如 619)">
+                <input type="text" id="searchInput" placeholder="搜尋路線">
             </div>
         </div>
         <div class="scrollable-content" id="search-results">
-            <h2 class="section-title">已儲存 / 附近路線</h2>
+            <h2 class="section-title">已儲存路線</h2>
             <div id="saved-list"></div>
         </div>
     </div>
@@ -142,40 +145,55 @@
 <script>
     let allRoutes = [];
     let map = null, mapMarker = null, polyline = null, highlightMarker = null;
-    let userLoc = null;
     let favorites = JSON.parse(localStorage.getItem('hkbus_favs')) || [];
     let currentEtaToken = 0;
     let currentRouteIdx = -1;
+    let currentActiveIndex = 0; // 追蹤目前所在的 Tab 索引
     let prevPage = 'home';
 
-    // 強化的時間解析器，防止 NaN:NaN
+    // 解析時間
     function parseEtaText(etaStr) {
         if (!etaStr) return { min: -1, text: '未有資料' };
         const etaDate = new Date(etaStr);
         if (isNaN(etaDate.getTime())) return { min: -1, text: '未有資料' };
-        
         const diff = Math.max(0, Math.round((etaDate - new Date()) / 60000));
         const timeStr = etaDate.getHours().toString().padStart(2, '0') + ":" + etaDate.getMinutes().toString().padStart(2, '0');
-        
         return { min: diff, text: diff === 0 ? `即將到達 - ${timeStr}` : `${diff} 分鐘 - ${timeStr}` };
     }
 
+    // 更新導航指示圓圈位置
+    function updateIndicatorPosition() {
+        const tabs = document.querySelectorAll('.nav-tab');
+        const activeTab = tabs[currentActiveIndex];
+        const ind = document.getElementById('nav-ind');
+        
+        // 精確計算：Tab 的左邊距 + (Tab 寬度 / 2) - (圓圈寬度 / 2)
+        const offset = activeTab.offsetLeft + (activeTab.offsetWidth / 2) - 30;
+        ind.style.left = offset + 'px';
+    }
+
+    // 切換頁面
     function showPage(id, index) {
-        if (id !== 'details') prevPage = id;
+        if (id !== 'details') {
+            prevPage = id;
+            currentActiveIndex = index;
+        }
+        
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('page-' + id).classList.add('active');
         
-        // 導航欄動畫
         const tabs = document.querySelectorAll('.nav-tab');
         tabs.forEach(t => t.classList.remove('active'));
-        tabs[index].classList.add('active');
-        
-        const ind = document.getElementById('nav-ind');
-        const offset = tabs[index].offsetLeft + (tabs[index].offsetWidth / 2) - 30;
-        ind.style.left = offset + 'px';
+        if (id !== 'details') {
+            tabs[index].classList.add('active');
+            updateIndicatorPosition();
+        }
 
         if(id === 'search') renderSearchPage();
     }
+
+    // 監聽視窗大小改變
+    window.addEventListener('resize', updateIndicatorPosition);
 
     function goBack() { showPage(prevPage, prevPage === 'home' ? 0 : 1); }
 
@@ -201,11 +219,11 @@
             }
 
             renderAllRoutes();
-            navigator.geolocation.getCurrentPosition(p => { userLoc = { lat: p.coords.latitude, lng: p.coords.longitude }; });
+            setTimeout(updateIndicatorPosition, 100); // 確保初次載入位置正確
         } catch(e) { console.error(e); }
     }
 
-    function renderItem(r, idx, isFav = false) {
+    function renderItem(r, idx) {
         return `
             <div class="route-item" onclick="openRoute(${idx})">
                 <div class="route-badge ${r.badge}">${r.no}</div>
@@ -239,7 +257,7 @@
     async function openRoute(idx) {
         currentRouteIdx = idx;
         const r = allRoutes[idx];
-        showPage('details', prevPage === 'home' ? 0 : 1);
+        showPage('details', currentActiveIndex);
         document.getElementById('details-title').innerText = `${r.no} 往 ${r.dest}`;
         document.getElementById('fav-btn').innerText = favorites.includes(idx) ? "已儲存" : "儲存";
         
@@ -254,7 +272,7 @@
         if(mapMarker) map.removeLayer(mapMarker);
         if(highlightMarker) map.removeLayer(highlightMarker);
         
-        polyline = L.polyline([], {color: '#d0202e'}).addTo(map);
+        polyline = L.polyline([], {color: '#ff3b30'}).addTo(map);
         mapMarker = L.layerGroup().addTo(map);
 
         currentEtaToken++;
@@ -266,7 +284,6 @@
                 const bound = r.dir === 'I' ? 'inbound' : 'outbound';
                 const s = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${r.no}/${bound}/${r.stype}`).then(res => res.json());
                 const etas = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-eta/${r.no}/${r.stype}`).then(res => res.json());
-                
                 for(let item of s.data) {
                     const stopInfo = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop/${item.stop}`).then(res => res.json());
                     const stopEta = etas.data.filter(e => e.seq == item.seq && e.dir == r.dir).map(e => e.eta);
@@ -282,7 +299,6 @@
                     stops.push({ name: stopInfo.data.name_tc, lat: stopInfo.data.lat, lng: stopInfo.data.long, etas: stopEta });
                 }
             } else if (r.co === 'NLB') {
-                // 修正 NLB 載入邏輯
                 const s = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=${r.routeId}`).then(res => res.json());
                 for(let item of s.stops) {
                     const eta = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/eta.php?action=list&routeId=${r.routeId}&stopId=${item.stopId}`).then(res => res.json());
@@ -307,7 +323,7 @@
 
             const pts = stops.map(s => [s.lat, s.lng]);
             polyline.setLatLngs(pts);
-            pts.forEach(p => L.circleMarker(p, {radius: 4, color: '#d0202e', fill: true, fillColor: '#fff', fillOpacity: 1}).addTo(mapMarker));
+            pts.forEach(p => L.circleMarker(p, {radius: 4, color: '#ff3b30', fill: true, fillColor: '#fff', fillOpacity: 1}).addTo(mapMarker));
             map.fitBounds(polyline.getBounds(), {padding: [20, 20]});
 
         } catch(e) { console.error(e); list.innerHTML = '<p style="padding:20px; color:red;">載入出錯</p>'; }
@@ -317,7 +333,6 @@
         const isExp = el.classList.contains('expanded');
         document.querySelectorAll('.stop-container').forEach(c => c.classList.remove('expanded'));
         if(!isExp) el.classList.add('expanded');
-
         if(highlightMarker) map.removeLayer(highlightMarker);
         highlightMarker = L.marker([lat, lng], {
             icon: L.divIcon({ className: '', html: '<div class="pulse-icon"></div>', iconSize: [20, 20], iconAnchor: [10, 10] })
