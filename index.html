@@ -69,19 +69,17 @@
             border-radius: 16px; padding: 12px 16px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.02);
             transition: all 0.3s ease;
-            cursor: pointer;
         }
-        .search-box.active {
+        .search-box:focus-within {
             border-color: var(--brand-color);
             box-shadow: 0 8px 24px var(--brand-light);
         }
-        .search-box svg { fill: var(--text-secondary); width: 20px; height: 20px; flex-shrink: 0; }
+        .search-box svg { fill: var(--text-secondary); width: 20px; height: 20px; }
         .search-box input { 
             flex: 1; border: none; background: transparent; font-size: 16px; 
-            color: var(--text-primary); outline: none; margin-left: 10px; font-weight: 500;
-            cursor: pointer;
+            color: var(--text-primary); outline: none; margin-left: 10px; font-weight: 400;
         }
-        .search-box input::placeholder { color: var(--text-secondary); font-weight: 400; }
+        .search-box input::placeholder { color: var(--text-secondary); }
 
         .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
         .page.active { display: flex; animation: fadeIn 0.3s ease forwards; }
@@ -89,10 +87,69 @@
         
         .scrollable-content { 
             flex: 1; overflow-y: auto; padding: 10px 24px calc(110px + var(--safe-bottom)) 24px; 
-            scroll-behavior: smooth; transition: padding-bottom 0.3s ease;
+            scroll-behavior: smooth;
         }
         .scrollable-content::-webkit-scrollbar { display: none; }
-        .scrollable-content.kb-open { padding-bottom: calc(270px + var(--safe-bottom)); }
+
+        /* Custom Keyboard Styles */
+        .custom-keyboard {
+            background: var(--surface-color);
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-soft);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+        .keyboard-row {
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+        }
+        .letters-row {
+            overflow-x: auto;
+            justify-content: flex-start;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 2px;
+        }
+        .letters-row::-webkit-scrollbar { display: none; }
+        .key-btn {
+            background: var(--bg-color);
+            border: 1px solid var(--border-soft);
+            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: 500;
+            border-radius: 12px;
+            flex: 1;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.15s ease;
+            user-select: none;
+        }
+        .letters-row .key-btn {
+            flex: 0 0 auto;
+            width: 44px;
+            height: 44px;
+            font-size: 18px;
+        }
+        .key-btn:active:not(.disabled) {
+            transform: scale(0.92);
+            background: var(--border-soft);
+        }
+        .key-btn.disabled {
+            opacity: 0.25;
+            pointer-events: none;
+        }
+        .key-btn.action {
+            background: var(--border-soft);
+        }
+        .key-btn.action svg { width: 22px; height: 22px; fill: var(--text-primary); }
 
         .route-item { 
             background: var(--surface-color); border-radius: 16px; padding: 16px; 
@@ -166,51 +223,12 @@
         .nav-tab.active span { opacity: 0; }
         .nav-indicator { position: absolute; top: -8px; width: 56px; height: 4px; background: var(--brand-text); border-radius: 4px; left: 0; transition: left 0.3s ease; z-index: 1005; pointer-events: auto; }
 
-        /* Custom Number Pad */
-        .keyboard-container {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: #D1D5DB;
-            padding: 12px 8px calc(12px + var(--safe-bottom)) 8px;
-            transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            z-index: 2000;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-            border-top: 1px solid var(--border-soft);
-        }
-        .keyboard-container.active { transform: translateY(0); }
-        @media (prefers-color-scheme: dark) {
-            .keyboard-container { background: #2C2C2E; box-shadow: 0 -4px 20px rgba(0,0,0,0.3); }
-        }
-        .kb-grid {
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
-        }
-        .kb-key {
-            background: #FFFFFF; border: none; border-radius: 6px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            font-size: 20px; font-weight: 500; color: #1D1D1F;
-            height: 48px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; user-select: none;
-            -webkit-tap-highlight-color: transparent; transition: background 0.1s, opacity 0.2s;
-        }
-        @media (prefers-color-scheme: dark) {
-            .kb-key { background: #636366; color: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-        }
-        .kb-key:active { background: #E5E5EA; }
-        @media (prefers-color-scheme: dark) { .kb-key:active { background: #48484A; } }
-        
-        /* Auto Disable State */
-        .kb-key.disabled { opacity: 0.25; pointer-events: none; }
-        
-        .kb-zero { grid-column: span 2; }
-        .kb-action { background: #B3B7BE; font-size: 16px; }
-        @media (prefers-color-scheme: dark) { .kb-action { background: #3A3A3C; } }
-        .kb-action svg { width: 24px; height: 24px; fill: currentColor; }
-
-        /* Status UI */
+        /* Status UI (Replacing Emojis) */
         .status-text { text-align: center; color: var(--text-secondary); padding: 40px 20px; font-size: 14px; font-weight: 400; line-height: 1.6; }
         .status-icon { display: flex; justify-content: center; margin-bottom: 16px; color: var(--text-secondary); }
         .status-icon svg { width: 36px; height: 36px; fill: currentColor; }
         .icon-spin svg { animation: spin 1s linear infinite; }
+        
         .update-time { font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 10px; margin-bottom: 20px; }
     </style>
 </head>
@@ -221,17 +239,60 @@
         <div class="header-section">
             <span class="greeting" id="greeting-text">早晨</span>
             <h1>搜尋路線</h1>
-            <div class="search-box" id="searchBoxContainer" onclick="openKeyboard()">
+            <div class="search-box">
                 <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <input type="text" id="routeSearch" placeholder="輸入路線號碼" readonly onfocus="this.blur()">
+                <input type="text" id="routeSearch" placeholder="輸入路線號碼或目的地" oninput="filterRoutes()">
             </div>
         </div>
-        <div class="scrollable-content" id="main-list">
-            <div class="status-text">
-                <div class="status-icon icon-spin">
-                    <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+        <div class="scrollable-content" id="home-scroll">
+            <div class="custom-keyboard" id="route-keyboard">
+                <div class="keyboard-row letters-row">
+                    <div class="key-btn" data-key="A">A</div>
+                    <div class="key-btn" data-key="B">B</div>
+                    <div class="key-btn" data-key="C">C</div>
+                    <div class="key-btn" data-key="E">E</div>
+                    <div class="key-btn" data-key="F">F</div>
+                    <div class="key-btn" data-key="H">H</div>
+                    <div class="key-btn" data-key="K">K</div>
+                    <div class="key-btn" data-key="M">M</div>
+                    <div class="key-btn" data-key="N">N</div>
+                    <div class="key-btn" data-key="P">P</div>
+                    <div class="key-btn" data-key="R">R</div>
+                    <div class="key-btn" data-key="S">S</div>
+                    <div class="key-btn" data-key="W">W</div>
+                    <div class="key-btn" data-key="X">X</div>
                 </div>
-                正在載入路線資料...
+                <div class="keyboard-row">
+                    <div class="key-btn" data-key="1">1</div>
+                    <div class="key-btn" data-key="2">2</div>
+                    <div class="key-btn" data-key="3">3</div>
+                </div>
+                <div class="keyboard-row">
+                    <div class="key-btn" data-key="4">4</div>
+                    <div class="key-btn" data-key="5">5</div>
+                    <div class="key-btn" data-key="6">6</div>
+                </div>
+                <div class="keyboard-row">
+                    <div class="key-btn" data-key="7">7</div>
+                    <div class="key-btn" data-key="8">8</div>
+                    <div class="key-btn" data-key="9">9</div>
+                </div>
+                <div class="keyboard-row">
+                    <div class="key-btn action" id="key-clear">C</div>
+                    <div class="key-btn" data-key="0">0</div>
+                    <div class="key-btn action" id="key-del">
+                        <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59z"/></svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="main-list">
+                <div class="status-text">
+                    <div class="status-icon icon-spin">
+                        <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+                    </div>
+                    正在載入路線資料...
+                </div>
             </div>
         </div>
     </div>
@@ -283,41 +344,6 @@
                 <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
                 <span>路線圖</span>
             </div>
-        </div>
-    </div>
-
-    <div class="keyboard-container" id="custom-keyboard">
-        <div class="kb-grid">
-            <div class="kb-key" data-val="1" onclick="kbType('1')">1</div>
-            <div class="kb-key" data-val="2" onclick="kbType('2')">2</div>
-            <div class="kb-key" data-val="3" onclick="kbType('3')">3</div>
-            <div class="kb-key" data-val="A" onclick="kbType('A')">A</div>
-            <div class="kb-key" data-val="B" onclick="kbType('B')">B</div>
-            <div class="kb-key" data-val="C" onclick="kbType('C')">C</div>
-            <div class="kb-key" data-val="E" onclick="kbType('E')">E</div>
-            
-            <div class="kb-key" data-val="4" onclick="kbType('4')">4</div>
-            <div class="kb-key" data-val="5" onclick="kbType('5')">5</div>
-            <div class="kb-key" data-val="6" onclick="kbType('6')">6</div>
-            <div class="kb-key" data-val="H" onclick="kbType('H')">H</div>
-            <div class="kb-key" data-val="K" onclick="kbType('K')">K</div>
-            <div class="kb-key" data-val="M" onclick="kbType('M')">M</div>
-            <div class="kb-key" data-val="N" onclick="kbType('N')">N</div>
-
-            <div class="kb-key" data-val="7" onclick="kbType('7')">7</div>
-            <div class="kb-key" data-val="8" onclick="kbType('8')">8</div>
-            <div class="kb-key" data-val="9" onclick="kbType('9')">9</div>
-            <div class="kb-key" data-val="P" onclick="kbType('P')">P</div>
-            <div class="kb-key" data-val="R" onclick="kbType('R')">R</div>
-            <div class="kb-key" data-val="S" onclick="kbType('S')">S</div>
-            <div class="kb-key" data-val="W" onclick="kbType('W')">W</div>
-
-            <div class="kb-key kb-zero" data-val="0" onclick="kbType('0')">0</div>
-            <div class="kb-key kb-action" id="kb-bksp" onclick="kbBksp()"><svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 14l-4-4-4 4-2-2 4-4-4-4 2-2 4 4 4-4 2 2-4 4 4 4-2 2z"/></svg></div>
-            <div class="kb-key" data-val="X" onclick="kbType('X')">X</div>
-            <div class="kb-key" data-val="Y" onclick="kbType('Y')">Y</div>
-            <div class="kb-key kb-action" id="kb-clr" onclick="kbClear()">C</div>
-            <div class="kb-key kb-action" onclick="closeKeyboard()"><svg viewBox="0 0 24 24"><path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg></div>
         </div>
     </div>
 </div>
@@ -375,10 +401,76 @@
         return 'badge-kmb';
     }
 
+    // Keyboard Logic
+    function initKeyboard() {
+        const input = document.getElementById('routeSearch');
+        const keys = document.querySelectorAll('.key-btn[data-key]');
+        const delBtn = document.getElementById('key-del');
+        const clearBtn = document.getElementById('key-clear');
+
+        keys.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if(btn.classList.contains('disabled')) return;
+                input.value += btn.getAttribute('data-key');
+                filterRoutes();
+            });
+        });
+
+        delBtn.addEventListener('click', () => {
+            if(delBtn.classList.contains('disabled')) return;
+            input.value = input.value.slice(0, -1);
+            filterRoutes();
+        });
+
+        clearBtn.addEventListener('click', () => {
+            if(clearBtn.classList.contains('disabled')) return;
+            input.value = '';
+            filterRoutes();
+        });
+
+        updateKeyboardState();
+    }
+
+    function updateKeyboardState() {
+        const q = document.getElementById('routeSearch').value.toUpperCase().trim();
+        const keys = document.querySelectorAll('.key-btn[data-key]');
+        
+        keys.forEach(btn => {
+            const key = btn.getAttribute('data-key');
+            const testQ = q + key;
+            
+            // If API hasn't loaded data yet, keep keys disabled
+            if (allRoutes.length === 0) {
+                btn.classList.add('disabled');
+                return;
+            }
+
+            // Verify if appending the key yields any potential route number match
+            const isValid = allRoutes.some(r => r.no.includes(testQ));
+            
+            if (isValid) {
+                btn.classList.remove('disabled');
+            } else {
+                btn.classList.add('disabled');
+            }
+        });
+
+        const delBtn = document.getElementById('key-del');
+        const clearBtn = document.getElementById('key-clear');
+        
+        if (q.length === 0) {
+            if(delBtn) delBtn.classList.add('disabled');
+            if(clearBtn) clearBtn.classList.add('disabled');
+        } else {
+            if(delBtn) delBtn.classList.remove('disabled');
+            if(clearBtn) clearBtn.classList.remove('disabled');
+        }
+    }
+
     async function init() {
         setGreeting();
+        initKeyboard();
         setTimeout(() => moveIndicator(0), 50); 
-        updateKeyboardState(); // Initialize disabled states
         
         try {
             loadAllStopsInBackground();
@@ -431,7 +523,7 @@
             allRoutes.sort((a, b) => a.no.localeCompare(b.no, undefined, { numeric: true, sensitivity: 'base' }));
 
             renderList(allRoutes);
-            updateKeyboardState(); // Re-evaluate after routes load
+            updateKeyboardState(); // Update keypad state once routes have populated
         } catch(e) { 
             document.getElementById('main-list').innerHTML = `
                 <div class="status-text">
@@ -440,82 +532,6 @@
                 </div>`; 
         }
     }
-
-    /* ==== Custom Keyboard & Searching Logic ==== */
-    
-    function openKeyboard() {
-        document.getElementById('custom-keyboard').classList.add('active');
-        document.getElementById('searchBoxContainer').classList.add('active');
-        document.getElementById('main-list').classList.add('kb-open');
-        updateKeyboardState();
-    }
-
-    function closeKeyboard() {
-        document.getElementById('custom-keyboard').classList.remove('active');
-        document.getElementById('searchBoxContainer').classList.remove('active');
-        document.getElementById('main-list').classList.remove('kb-open');
-    }
-
-    function kbType(val) {
-        const input = document.getElementById('routeSearch');
-        input.value += val;
-        filterRoutes();
-        updateKeyboardState();
-    }
-
-    function kbBksp() {
-        const input = document.getElementById('routeSearch');
-        input.value = input.value.slice(0, -1);
-        filterRoutes();
-        updateKeyboardState();
-    }
-
-    function kbClear() {
-        const input = document.getElementById('routeSearch');
-        input.value = '';
-        filterRoutes();
-        updateKeyboardState();
-    }
-
-    function updateKeyboardState() {
-        const q = document.getElementById('routeSearch').value.toUpperCase();
-        const keys = document.querySelectorAll('.kb-key[data-val]');
-        
-        // Disable backspace/clear if empty
-        const bkspBtn = document.getElementById('kb-bksp');
-        const clrBtn = document.getElementById('kb-clr');
-        if (q.length === 0) {
-            bkspBtn.classList.add('disabled');
-            clrBtn.classList.add('disabled');
-        } else {
-            bkspBtn.classList.remove('disabled');
-            clrBtn.classList.remove('disabled');
-        }
-
-        // Auto-disable keys
-        keys.forEach(k => {
-            const val = k.getAttribute('data-val');
-            const testStr = q + val;
-            
-            // Check if ANY route contains the combined prefix string
-            const isValidCombination = allRoutes.some(r => r.no.toUpperCase().includes(testStr));
-            
-            if (q === '' || isValidCombination) {
-                k.classList.remove('disabled');
-            } else {
-                k.classList.add('disabled');
-            }
-        });
-    }
-
-    function filterRoutes() {
-        const q = document.getElementById('routeSearch').value.toUpperCase().trim();
-        if (!q) { renderList(allRoutes); return; }
-        const filtered = allRoutes.filter(r => r.no.includes(q) || r.dest.includes(q));
-        renderList(filtered);
-    }
-    
-    /* ==== End Keyboard Logic ==== */
 
     async function loadAllStopsInBackground() {
         try {
@@ -552,6 +568,15 @@
                     </div>
                 </div>
             </div>`).join('');
+    }
+
+    function filterRoutes() {
+        const q = document.getElementById('routeSearch').value.toUpperCase().trim();
+        updateKeyboardState(); // Validate valid next keystrokes
+
+        if (!q) { renderList(allRoutes); return; }
+        const filtered = allRoutes.filter(r => r.no.includes(q) || r.dest.includes(q));
+        renderList(filtered);
     }
 
     function startNearbyLogic() {
@@ -618,7 +643,6 @@
         if(lng) lastLng = lng;
 
         try {
-            // Group stops within 800m
             let groupsMap = {};
             allStopsData.forEach(s => {
                 let d = getDistance(lastLat, lastLng, s.lat, s.lng);
@@ -937,8 +961,6 @@
     }
 
     function showPage(id, idx) {
-        closeKeyboard(); // Hide custom keyboard when switching pages
-
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('page-' + id).classList.add('active');
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
