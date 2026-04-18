@@ -69,15 +69,16 @@
             border-radius: 16px; padding: 12px 16px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.02);
             transition: all 0.3s ease;
+            cursor: pointer;
         }
-        .search-box:focus-within {
+        .search-box:focus-within, .search-box.kb-active {
             border-color: var(--brand-color);
             box-shadow: 0 8px 24px var(--brand-light);
         }
         .search-box svg { fill: var(--text-secondary); width: 20px; height: 20px; }
         .search-box input { 
             flex: 1; border: none; background: transparent; font-size: 16px; 
-            color: var(--text-primary); outline: none; margin-left: 10px; font-weight: 400;
+            color: var(--text-primary); outline: none; margin-left: 10px; font-weight: 400; cursor: pointer;
         }
         .search-box input::placeholder { color: var(--text-secondary); }
 
@@ -90,66 +91,6 @@
             scroll-behavior: smooth;
         }
         .scrollable-content::-webkit-scrollbar { display: none; }
-
-        /* Custom Keyboard Styles */
-        .custom-keyboard {
-            background: var(--surface-color);
-            border-radius: 16px;
-            padding: 12px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border-soft);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-        }
-        .keyboard-row {
-            display: flex;
-            gap: 8px;
-            justify-content: space-between;
-        }
-        .letters-row {
-            overflow-x: auto;
-            justify-content: flex-start;
-            padding-bottom: 4px;
-            -webkit-overflow-scrolling: touch;
-            margin-bottom: 2px;
-        }
-        .letters-row::-webkit-scrollbar { display: none; }
-        .key-btn {
-            background: var(--bg-color);
-            border: 1px solid var(--border-soft);
-            color: var(--text-primary);
-            font-size: 20px;
-            font-weight: 500;
-            border-radius: 12px;
-            flex: 1;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: 0.15s ease;
-            user-select: none;
-        }
-        .letters-row .key-btn {
-            flex: 0 0 auto;
-            width: 44px;
-            height: 44px;
-            font-size: 18px;
-        }
-        .key-btn:active:not(.disabled) {
-            transform: scale(0.92);
-            background: var(--border-soft);
-        }
-        .key-btn.disabled {
-            opacity: 0.25;
-            pointer-events: none;
-        }
-        .key-btn.action {
-            background: var(--border-soft);
-        }
-        .key-btn.action svg { width: 22px; height: 22px; fill: var(--text-primary); }
 
         .route-item { 
             background: var(--surface-color); border-radius: 16px; padding: 16px; 
@@ -213,7 +154,8 @@
         .eta-time.near { color: #E63946; } 
 
         /* Bottom Nav */
-        .bottom-nav-wrapper { position: absolute; bottom: 0; left: 0; right: 0; height: calc(85px + var(--safe-bottom)); z-index: 1000; pointer-events: none; }
+        .bottom-nav-wrapper { position: absolute; bottom: 0; left: 0; right: 0; height: calc(85px + var(--safe-bottom)); z-index: 1000; pointer-events: none; transition: transform 0.3s ease; }
+        .bottom-nav-wrapper.hide { transform: translateY(100%); }
         .nav-bg-shape { position: absolute; bottom: 0; width: 100%; height: calc(75px + var(--safe-bottom)); background: var(--nav-bg); pointer-events: auto; border-top: 1px solid var(--border-soft); }
         .nav-tabs { position: absolute; top: 10px; left: 0; right: 0; height: 65px; display: flex; justify-content: space-around; align-items: center; z-index: 1010; pointer-events: auto; }
         .nav-tab { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
@@ -223,13 +165,26 @@
         .nav-tab.active span { opacity: 0; }
         .nav-indicator { position: absolute; top: -8px; width: 56px; height: 4px; background: var(--brand-text); border-radius: 4px; left: 0; transition: left 0.3s ease; z-index: 1005; pointer-events: auto; }
 
-        /* Status UI (Replacing Emojis) */
+        /* Status UI */
         .status-text { text-align: center; color: var(--text-secondary); padding: 40px 20px; font-size: 14px; font-weight: 400; line-height: 1.6; }
         .status-icon { display: flex; justify-content: center; margin-bottom: 16px; color: var(--text-secondary); }
         .status-icon svg { width: 36px; height: 36px; fill: currentColor; }
         .icon-spin svg { animation: spin 1s linear infinite; }
         
         .update-time { font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 10px; margin-bottom: 20px; }
+
+        /* Custom Keyboard */
+        .custom-kb-overlay { position: fixed; bottom: -100%; left: 0; right: 0; background: #D1D5DB; padding: 8px 6px calc(8px + var(--safe-bottom)); z-index: 2000; transition: bottom 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        @media (prefers-color-scheme: dark) { .custom-kb-overlay { background: #2C2C2E; } }
+        .custom-kb-overlay.show { bottom: 0; }
+        .kb-body { display: flex; gap: 8px; }
+        .kb-left { flex: 4; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .kb-right { flex: 3; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; overflow-y: auto; max-height: 218px; }
+        .kb-key { background: #FFF; border-radius: 6px; font-size: 22px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 1px rgba(0,0,0,0.2); cursor: pointer; border: none; font-weight: 500; color: #000; }
+        @media (prefers-color-scheme: dark) { .kb-key { background: #48484A; color: #FFF; } }
+        .kb-key.disabled { opacity: 0.2; pointer-events: none; }
+        .kb-del { background: #BCC0C6; } .kb-zero { grid-column: span 2; background: #BCC0C6; }
+        @media (prefers-color-scheme: dark) { .kb-zero, .kb-del { background: #636366; } }
     </style>
 </head>
 <body>
@@ -239,60 +194,17 @@
         <div class="header-section">
             <span class="greeting" id="greeting-text">早晨</span>
             <h1>搜尋路線</h1>
-            <div class="search-box">
+            <div class="search-box" id="search-box-container" onclick="openKeyboard()">
                 <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <input type="text" id="routeSearch" placeholder="輸入路線號碼或目的地" oninput="filterRoutes()">
+                <input type="text" id="routeSearch" placeholder="輸入路線號碼" readonly>
             </div>
         </div>
-        <div class="scrollable-content" id="home-scroll">
-            <div class="custom-keyboard" id="route-keyboard">
-                <div class="keyboard-row letters-row">
-                    <div class="key-btn" data-key="A">A</div>
-                    <div class="key-btn" data-key="B">B</div>
-                    <div class="key-btn" data-key="C">C</div>
-                    <div class="key-btn" data-key="E">E</div>
-                    <div class="key-btn" data-key="F">F</div>
-                    <div class="key-btn" data-key="H">H</div>
-                    <div class="key-btn" data-key="K">K</div>
-                    <div class="key-btn" data-key="M">M</div>
-                    <div class="key-btn" data-key="N">N</div>
-                    <div class="key-btn" data-key="P">P</div>
-                    <div class="key-btn" data-key="R">R</div>
-                    <div class="key-btn" data-key="S">S</div>
-                    <div class="key-btn" data-key="W">W</div>
-                    <div class="key-btn" data-key="X">X</div>
+        <div class="scrollable-content" id="main-list">
+            <div class="status-text">
+                <div class="status-icon icon-spin">
+                    <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
                 </div>
-                <div class="keyboard-row">
-                    <div class="key-btn" data-key="1">1</div>
-                    <div class="key-btn" data-key="2">2</div>
-                    <div class="key-btn" data-key="3">3</div>
-                </div>
-                <div class="keyboard-row">
-                    <div class="key-btn" data-key="4">4</div>
-                    <div class="key-btn" data-key="5">5</div>
-                    <div class="key-btn" data-key="6">6</div>
-                </div>
-                <div class="keyboard-row">
-                    <div class="key-btn" data-key="7">7</div>
-                    <div class="key-btn" data-key="8">8</div>
-                    <div class="key-btn" data-key="9">9</div>
-                </div>
-                <div class="keyboard-row">
-                    <div class="key-btn action" id="key-clear">C</div>
-                    <div class="key-btn" data-key="0">0</div>
-                    <div class="key-btn action" id="key-del">
-                        <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59z"/></svg>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="main-list">
-                <div class="status-text">
-                    <div class="status-icon icon-spin">
-                        <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
-                    </div>
-                    正在載入路線資料...
-                </div>
+                正在載入路線資料...
             </div>
         </div>
     </div>
@@ -328,7 +240,7 @@
         <div class="stop-list-wrapper" id="details-list"></div>
     </div>
 
-    <div class="bottom-nav-wrapper">
+    <div class="bottom-nav-wrapper" id="bottom-nav">
         <div class="nav-bg-shape"></div>
         <div class="nav-indicator" id="nav-ind"></div>
         <div class="nav-tabs">
@@ -344,6 +256,16 @@
                 <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
                 <span>路線圖</span>
             </div>
+        </div>
+    </div>
+
+    <div class="custom-kb-overlay" id="customKb">
+        <div style="display:flex; justify-content:flex-end; padding:4px 8px 8px;">
+            <button style="color:#007AFF; font-weight:700; font-size:16px; background:none; border:none; cursor:pointer;" onclick="closeKeyboard()">完成</button>
+        </div>
+        <div class="kb-body">
+            <div class="kb-left" id="kb-num"></div>
+            <div class="kb-right" id="kb-alpha"></div>
         </div>
     </div>
 </div>
@@ -401,75 +323,9 @@
         return 'badge-kmb';
     }
 
-    // Keyboard Logic
-    function initKeyboard() {
-        const input = document.getElementById('routeSearch');
-        const keys = document.querySelectorAll('.key-btn[data-key]');
-        const delBtn = document.getElementById('key-del');
-        const clearBtn = document.getElementById('key-clear');
-
-        keys.forEach(btn => {
-            btn.addEventListener('click', () => {
-                if(btn.classList.contains('disabled')) return;
-                input.value += btn.getAttribute('data-key');
-                filterRoutes();
-            });
-        });
-
-        delBtn.addEventListener('click', () => {
-            if(delBtn.classList.contains('disabled')) return;
-            input.value = input.value.slice(0, -1);
-            filterRoutes();
-        });
-
-        clearBtn.addEventListener('click', () => {
-            if(clearBtn.classList.contains('disabled')) return;
-            input.value = '';
-            filterRoutes();
-        });
-
-        updateKeyboardState();
-    }
-
-    function updateKeyboardState() {
-        const q = document.getElementById('routeSearch').value.toUpperCase().trim();
-        const keys = document.querySelectorAll('.key-btn[data-key]');
-        
-        keys.forEach(btn => {
-            const key = btn.getAttribute('data-key');
-            const testQ = q + key;
-            
-            // If API hasn't loaded data yet, keep keys disabled
-            if (allRoutes.length === 0) {
-                btn.classList.add('disabled');
-                return;
-            }
-
-            // Verify if appending the key yields any potential route number match
-            const isValid = allRoutes.some(r => r.no.includes(testQ));
-            
-            if (isValid) {
-                btn.classList.remove('disabled');
-            } else {
-                btn.classList.add('disabled');
-            }
-        });
-
-        const delBtn = document.getElementById('key-del');
-        const clearBtn = document.getElementById('key-clear');
-        
-        if (q.length === 0) {
-            if(delBtn) delBtn.classList.add('disabled');
-            if(clearBtn) clearBtn.classList.add('disabled');
-        } else {
-            if(delBtn) delBtn.classList.remove('disabled');
-            if(clearBtn) clearBtn.classList.remove('disabled');
-        }
-    }
-
     async function init() {
         setGreeting();
-        initKeyboard();
+        initKeyboardUI(); // 初始化特製鍵盤
         setTimeout(() => moveIndicator(0), 50); 
         
         try {
@@ -523,7 +379,7 @@
             allRoutes.sort((a, b) => a.no.localeCompare(b.no, undefined, { numeric: true, sensitivity: 'base' }));
 
             renderList(allRoutes);
-            updateKeyboardState(); // Update keypad state once routes have populated
+            updateKeyboardState(); // 載入完更新按鍵狀態
         } catch(e) { 
             document.getElementById('main-list').innerHTML = `
                 <div class="status-text">
@@ -532,6 +388,49 @@
                 </div>`; 
         }
     }
+
+    /* -----------------------------------------------------------
+       鍵盤邏輯 UI (Keyboard Logic)
+    ----------------------------------------------------------- */
+    function initKeyboardUI() {
+        const numPad = document.getElementById('kb-num'), alphaPad = document.getElementById('kb-alpha');
+        "123456789".split('').forEach(n => numPad.innerHTML += `<button class="kb-key" data-val="${n}">${n}</button>`);
+        numPad.innerHTML += `<button class="kb-key kb-zero" data-val="0">0</button><button class="kb-key kb-del" data-val="del">←</button>`;
+        "ABCDEFG HKMNPRST WXYZ".replace(/ /g,'').split('').forEach(l => alphaPad.innerHTML += `<button class="kb-key" data-val="${l}">${l}</button>`);
+
+        document.querySelectorAll('.kb-key').forEach(k => {
+            k.onclick = (e) => {
+                e.stopPropagation();
+                const input = document.getElementById('routeSearch');
+                if (k.dataset.val === 'del') input.value = input.value.slice(0, -1);
+                else input.value += k.dataset.val;
+                
+                filterRoutes(); // 對接你的搜尋邏輯
+                updateKeyboardState(); // 更新鍵盤按鈕禁用狀態
+            }
+        });
+    }
+
+    function updateKeyboardState() {
+        const current = document.getElementById('routeSearch').value.toUpperCase();
+        document.querySelectorAll('.kb-key').forEach(k => {
+            if (k.dataset.val === 'del') { k.classList.toggle('disabled', current.length === 0); return; }
+            k.classList.toggle('disabled', !allRoutes.some(r => r.no.toUpperCase().includes(current + k.dataset.val) || r.dest.includes(current + k.dataset.val)));
+        });
+    }
+
+    function openKeyboard() {
+        document.getElementById('customKb').classList.add('show');
+        document.getElementById('bottom-nav').classList.add('hide'); // 隱藏底部導航，防止擋住鍵盤
+        document.getElementById('search-box-container').classList.add('kb-active');
+    }
+
+    function closeKeyboard() {
+        document.getElementById('customKb').classList.remove('show');
+        document.getElementById('bottom-nav').classList.remove('hide');
+        document.getElementById('search-box-container').classList.remove('kb-active');
+    }
+    /* ----------------------------------------------------------- */
 
     async function loadAllStopsInBackground() {
         try {
@@ -572,8 +471,6 @@
 
     function filterRoutes() {
         const q = document.getElementById('routeSearch').value.toUpperCase().trim();
-        updateKeyboardState(); // Validate valid next keystrokes
-
         if (!q) { renderList(allRoutes); return; }
         const filtered = allRoutes.filter(r => r.no.includes(q) || r.dest.includes(q));
         renderList(filtered);
@@ -970,6 +867,9 @@
         moveIndicator(idx);
         
         if (id === 'details' && map) setTimeout(() => map.invalidateSize(), 10);
+        
+        // 切換頁面時關閉鍵盤
+        if (id !== 'home') closeKeyboard();
         
         if (id === 'nearby') {
             startNearbyLogic();
