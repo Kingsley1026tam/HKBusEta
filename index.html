@@ -65,18 +65,9 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: all 0.3s ease;
         }
         .search-box:focus-within { border-color: var(--brand-color); box-shadow: 0 8px 24px var(--brand-light); }
-        
-        /* 當自訂鍵盤開啟時，搜尋框的高亮樣式 */
-        .search-box.kb-active {
-            border-color: var(--brand-color) !important;
-            border-width: 2px;
-            box-shadow: 0 0 8px var(--brand-light);
-            padding: 11px 15px; /* 增加邊框厚度時微調 padding 保持高度不變 */
-        }
-        
         .search-box svg { fill: var(--text-secondary); width: 20px; height: 20px; flex-shrink: 0; }
         
-        /* Disable native keyboard via readonly */
+        /* Disable native keyboard via pointer-events and readonly */
         .search-box input { 
             flex: 1; border: none; background: transparent; font-size: 18px; 
             color: var(--text-primary); outline: none; margin-left: 10px; font-weight: 600;
@@ -103,6 +94,7 @@
             display: flex; align-items: center; justify-content: center; 
             border-radius: 12px; padding: 0 8px; flex-shrink: 0; text-align: center;
         }
+        .route-badge.small { min-width: 50px; height: 36px; font-size: 15px; border-radius: 10px; }
         .badge-kmb { background: linear-gradient(135deg, #E63946, #D0202E); }
         .badge-lwb { background: linear-gradient(135deg, #FFAA00, #F39800); }
         .badge-ctb { background: linear-gradient(135deg, #FFF64D, #FFF200); color: #00558e; border: 1px solid rgba(0,0,0,0.05); }
@@ -112,6 +104,17 @@
         .route-dest { font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .route-sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; font-weight: 400; display: flex; align-items: center; gap: 6px; }
 
+        .nearby-group { background: var(--surface-color); border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border-soft); }
+        .nearby-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-soft); }
+        .nearby-name { font-size: 17px; font-weight: 600; }
+        .nearby-dist { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+        .nearby-row { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+        .nearby-row:last-child { margin-bottom: 0; }
+        .nearby-etas { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .eta-pill { font-size: 13px; font-weight: 600; background: var(--bg-color); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-soft); }
+        .eta-pill.near { color: #E63946; background: rgba(230, 57, 70, 0.08); border-color: rgba(230, 57, 70, 0.2); }
+        .eta-empty { font-size: 13px; color: var(--text-secondary); }
+
         .back-bar { padding: calc(var(--safe-top) - 10px) 24px 15px; background: var(--bg-color); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
         .back-btn { background: var(--surface-color); border: 1px solid var(--border-soft); color: var(--text-primary); font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 16px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
         .back-btn svg { width: 16px; height: 16px; }
@@ -119,6 +122,21 @@
         
         #map { width: 100%; height: 28vh; border-radius: 0 0 24px 24px; flex-shrink: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); z-index: 10; position: relative;}
         .stop-list-wrapper { flex: 1; overflow-y: auto; padding: 16px 24px calc(110px + var(--safe-bottom)); scroll-behavior: smooth; }
+        
+        .stop-container { background: var(--surface-color); border-radius: 16px; margin-bottom: 10px; border: 1px solid var(--border-soft); padding: 16px; cursor: pointer; transition: all 0.2s ease; }
+        .stop-container.expanded { border-color: var(--text-secondary); }
+        .stop-header { display: flex; justify-content: space-between; align-items: center; }
+        .stop-name { font-weight: 500; font-size: 15px; line-height: 1.4; max-width: 85%; }
+        .stop-icon-arrow { fill: var(--text-secondary); transition: transform 0.2s; width: 20px; height: 20px; }
+        .stop-container.expanded .stop-icon-arrow { transform: rotate(180deg); }
+        .stop-details { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
+        .stop-container.expanded .stop-details { display: block; animation: fadeIn 0.2s ease; }
+        
+        .eta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .eta-row:last-child { margin-bottom: 0; }
+        .eta-remark { font-size: 13px; color: var(--text-secondary); font-weight: 400; display: flex; align-items: center; gap: 6px; }
+        .eta-time { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+        .eta-time.near { color: #E63946; } 
 
         .bottom-nav-wrapper { position: absolute; bottom: 0; left: 0; right: 0; height: calc(85px + var(--safe-bottom)); z-index: 1000; pointer-events: none; transition: transform 0.3s ease; }
         .bottom-nav-wrapper.hide { transform: translateY(100%); }
@@ -135,11 +153,12 @@
         .status-icon { display: flex; justify-content: center; margin-bottom: 16px; color: var(--text-secondary); }
         .status-icon svg { width: 36px; height: 36px; fill: currentColor; }
         .icon-spin svg { animation: spin 1s linear infinite; }
+        .update-time { font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 10px; margin-bottom: 20px; }
 
-        /* ====== Custom Keyboard Styles ====== */
+        /* Custom Keyboard Styles */
         .custom-kb-overlay {
             position: fixed; bottom: -100%; left: 0; right: 0; 
-            background: #D1D5DB; 
+            background: #D1D5DB; /* Light gray matching the image */
             padding: 8px 6px calc(8px + var(--safe-bottom)) 6px; 
             z-index: 2000; transition: bottom 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             display: flex; gap: 8px; flex-direction: column;
@@ -154,19 +173,8 @@
         @media (prefers-color-scheme: dark) { .kb-close-btn { color: #0A84FF; } }
         
         .kb-body { display: flex; gap: 8px; }
-        
         .kb-left { flex: 4; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        
-        .kb-right { 
-            flex: 3; 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 6px; 
-            overflow-y: auto; 
-            max-height: 218px; /* 剛好對齊左側數字鍵盤的 4 行高度 */
-            padding-right: 2px;
-        }
-        .kb-right::-webkit-scrollbar { display: none; }
+        .kb-right { flex: 3; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
         
         .kb-key {
             background: #FFFFFF; border: none; border-radius: 6px;
@@ -275,21 +283,11 @@
                 <button class="kb-key" data-val="A">A</button>
                 <button class="kb-key" data-val="B">B</button>
                 <button class="kb-key" data-val="C">C</button>
-                <button class="kb-key" data-val="D">D</button>
                 <button class="kb-key" data-val="E">E</button>
-                <button class="kb-key" data-val="F">F</button>
-                <button class="kb-key" data-val="G">G</button>
                 <button class="kb-key" data-val="H">H</button>
                 <button class="kb-key" data-val="K">K</button>
-                <button class="kb-key" data-val="M">M</button>
                 <button class="kb-key" data-val="N">N</button>
                 <button class="kb-key" data-val="P">P</button>
-                <button class="kb-key" data-val="R">R</button>
-                <button class="kb-key" data-val="S">S</button>
-                <button class="kb-key" data-val="T">T</button>
-                <button class="kb-key" data-val="W">W</button>
-                <button class="kb-key" data-val="X">X</button>
-                <button class="kb-key" data-val="Y">Y</button>
             </div>
         </div>
     </div>
@@ -299,8 +297,13 @@
 <script>
     let allRoutes = [], currentIdx = 0;
     let allStopsData = []; 
+    let map = null, polyline = null, mapMarkers = L.layerGroup();
+    let currentStopsData = [];
     let currentRouteData = { no: '', co: '', dir: '', stype: '' };
+    let nearbyRefreshInterval = null;
+    let isFetchingNearby = false;
 
+    // Set Greeting
     function setGreeting() {
         const h = new Date().getHours();
         document.getElementById('greeting-text').innerText = (h>=5 && h<12) ? "早晨" : (h>=12 && h<18) ? "午安" : "晚安";
@@ -309,9 +312,10 @@
     async function init() {
         setGreeting();
         setTimeout(() => moveIndicator(0), 50); 
-        initKeyboard(); 
+        initKeyboard(); // 初始化自訂鍵盤
         
         try {
+            loadAllStopsInBackground();
             const kmbReq = fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/').then(r => r.json());
             const ctbReq = fetch('https://rt.data.gov.hk/v2/transport/citybus/route/ctb').then(r => r.json());
             const [kmbRes, ctbRes] = await Promise.allSettled([kmbReq, ctbReq]);
@@ -337,31 +341,34 @@
 
             allRoutes = Object.values(routeMap).sort((a, b) => a.no.localeCompare(b.no, undefined, { numeric: true }));
             renderList(allRoutes);
-            updateKeyboardState();
+            updateKeyboardState(); // 載入路線後更新鍵盤可用狀態
             
         } catch(e) { 
             document.getElementById('main-list').innerHTML = `<div class="status-text">無法載入路線資料<br>請檢查網絡。</div>`; 
         }
     }
 
-    /* ====== Keyboard Logic ====== */
+    /* ====== 智能鍵盤邏輯 ====== */
     const searchInput = document.getElementById('routeSearch');
     const customKb = document.getElementById('customKb');
     const bottomNav = document.getElementById('bottom-nav');
     const kbKeys = document.querySelectorAll('.kb-key');
 
     function initKeyboard() {
+        // 點擊搜尋框顯示鍵盤
         document.getElementById('search-box-container').addEventListener('click', (e) => {
             e.stopPropagation();
             openKeyboard();
         });
 
+        // 點擊其他地方隱藏鍵盤
         document.addEventListener('click', (e) => {
             if (!customKb.contains(e.target) && !document.getElementById('search-box-container').contains(e.target)) {
                 closeKeyboard();
             }
         });
 
+        // 按鍵事件綁定
         kbKeys.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -384,19 +391,17 @@
 
     function openKeyboard() {
         customKb.classList.add('show');
-        bottomNav.classList.add('hide'); 
-        document.getElementById('search-box-container').classList.add('kb-active');
+        bottomNav.classList.add('hide'); // 收起底部導航騰出空間
         updateKeyboardState();
     }
 
     function closeKeyboard() {
         customKb.classList.remove('show');
         bottomNav.classList.remove('hide');
-        document.getElementById('search-box-container').classList.remove('kb-active');
     }
 
     function updateKeyboardState() {
-        if(allRoutes.length === 0) return; 
+        if(allRoutes.length === 0) return; // 尚未載入資料
         const currentText = searchInput.value.toUpperCase();
 
         kbKeys.forEach(btn => {
@@ -408,6 +413,7 @@
             }
 
             const testVal = currentText + val;
+            // 核心智能預測：比對是否仍有路線包含這些字元
             const hasMatch = allRoutes.some(r => r.no.includes(testVal));
             
             if (hasMatch) {
@@ -434,12 +440,27 @@
     function filterRoutes() {
         const q = searchInput.value.toUpperCase().trim();
         if (!q) { renderList(allRoutes); return; }
-        const filtered = allRoutes.filter(r => r.no.includes(q));
+        const filtered = allRoutes.filter(r => r.no.includes(q)); // 由於自訂鍵盤只能打數字跟特定字母，移除目的地搜尋以提升精準度
         renderList(filtered);
     }
 
+    /* ====== 其他頁面邏輯保持不變 (配合省略) ====== */
+    async function loadAllStopsInBackground() {
+        try {
+            fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop').then(r=>r.json()).then(d => { if(d.data) d.data.forEach(s => allStopsData.push({ id: s.stop, name: s.name_tc, lat: s.lat, lng: s.long, co: 'KMB' })); });
+            fetch('https://rt.data.gov.hk/v2/transport/citybus/stop').then(r=>r.json()).then(d => { if(d.data) d.data.forEach(s => allStopsData.push({ id: s.stop, name: s.name_tc, lat: s.lat, lng: s.long, co: 'CTB' })); });
+        } catch(e) {}
+    }
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3, p1 = lat1 * Math.PI/180, p2 = lat2 * Math.PI/180, dp = (lat2-lat1) * Math.PI/180, dl = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    // 簡化版的路線圖跳轉，保持架構完整
     function openRoute(no, co, dir, stype, dest) {
-        closeKeyboard(); 
+        closeKeyboard(); // 進入詳細頁面時確保收起鍵盤
         currentRouteData = { no, co, dir, stype };
         showPage('details', 2);
         document.getElementById('details-title').innerText = no;
@@ -460,7 +481,7 @@
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
         document.getElementById('tab-' + idx).classList.add('active');
         currentIdx = idx; moveIndicator(idx);
-        if(id !== 'home') closeKeyboard(); 
+        if(id !== 'home') closeKeyboard(); // 切換頁面時收起鍵盤
     }
 
     window.addEventListener('resize', () => requestAnimationFrame(() => moveIndicator(currentIdx)));
