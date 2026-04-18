@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>HKBusEta</title>
     
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="favicon.ico">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
@@ -56,42 +59,49 @@
         .greeting { font-size: 15px; color: var(--text-secondary); font-weight: 500; margin-bottom: 4px; display: block; }
         .header-section h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
         .refresh-btn { font-size: 14px; background: var(--surface-color); border: 1px solid var(--border-soft); padding: 6px 12px; border-radius: 14px; font-weight: 600; color: var(--text-primary); cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .refresh-btn:active { transform: scale(0.95); }
         .refresh-btn.spinning svg { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .search-box {
             display: flex; align-items: center; background: var(--surface-color); 
-            border: 1px solid var(--border-soft); border-radius: 16px; padding: 12px 16px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: all 0.3s ease;
+            border: 1px solid var(--border-soft);
+            border-radius: 16px; padding: 12px 16px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
         }
-        .search-box:focus-within { border-color: var(--brand-color); box-shadow: 0 8px 24px var(--brand-light); }
-        .search-box svg { fill: var(--text-secondary); width: 20px; height: 20px; flex-shrink: 0; }
-        
-        /* Disable native keyboard via pointer-events and readonly */
+        .search-box:focus-within {
+            border-color: var(--brand-color);
+            box-shadow: 0 8px 24px var(--brand-light);
+        }
+        .search-box svg { fill: var(--text-secondary); width: 20px; height: 20px; }
         .search-box input { 
-            flex: 1; border: none; background: transparent; font-size: 18px; 
-            color: var(--text-primary); outline: none; margin-left: 10px; font-weight: 600;
-            cursor: pointer; caret-color: transparent;
+            flex: 1; border: none; background: transparent; font-size: 16px; 
+            color: var(--text-primary); outline: none; margin-left: 10px; font-weight: 400;
         }
-        .search-box input::placeholder { color: var(--text-secondary); font-weight: 400; font-size: 16px; }
+        .search-box input::placeholder { color: var(--text-secondary); }
 
         .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
         .page.active { display: flex; animation: fadeIn 0.3s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        .scrollable-content { flex: 1; overflow-y: auto; padding: 10px 24px calc(110px + var(--safe-bottom)) 24px; scroll-behavior: smooth; }
+        .scrollable-content { 
+            flex: 1; overflow-y: auto; padding: 10px 24px calc(110px + var(--safe-bottom)) 24px; 
+            scroll-behavior: smooth;
+        }
         .scrollable-content::-webkit-scrollbar { display: none; }
 
         .route-item { 
             background: var(--surface-color); border-radius: 16px; padding: 16px; 
             display: flex; align-items: center; gap: 16px; margin-bottom: 12px; 
-            cursor: pointer; transition: transform 0.2s ease; border: 1px solid var(--border-soft);
+            cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s;
+            border: 1px solid var(--border-soft);
         }
         .route-item:active { transform: scale(0.97); }
         
         .route-badge { 
-            color: #fff; font-size: 18px; font-weight: 700; min-width: 60px; height: 44px; 
-            display: flex; align-items: center; justify-content: center; 
+            color: #fff; font-size: 18px; font-weight: 700; 
+            min-width: 60px; height: 44px; display: flex; align-items: center; justify-content: center; 
             border-radius: 12px; padding: 0 8px; flex-shrink: 0; text-align: center;
         }
         .route-badge.small { min-width: 50px; height: 36px; font-size: 15px; border-radius: 10px; }
@@ -104,6 +114,7 @@
         .route-dest { font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .route-sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; font-weight: 400; display: flex; align-items: center; gap: 6px; }
 
+        /* Nearby Styles */
         .nearby-group { background: var(--surface-color); border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border-soft); }
         .nearby-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-soft); }
         .nearby-name { font-size: 17px; font-weight: 600; }
@@ -115,19 +126,22 @@
         .eta-pill.near { color: #E63946; background: rgba(230, 57, 70, 0.08); border-color: rgba(230, 57, 70, 0.2); }
         .eta-empty { font-size: 13px; color: var(--text-secondary); }
 
+        /* Details Styles */
         .back-bar { padding: calc(var(--safe-top) - 10px) 24px 15px; background: var(--bg-color); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-        .back-btn { background: var(--surface-color); border: 1px solid var(--border-soft); color: var(--text-primary); font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 16px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .back-btn { background: var(--surface-color); border: 1px solid var(--border-soft); color: var(--text-primary); font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 16px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: 0.2s; }
+        .back-btn:active { opacity: 0.7; }
         .back-btn svg { width: 16px; height: 16px; }
         #details-title { font-size: 17px; font-weight: 600; }
         
         #map { width: 100%; height: 28vh; border-radius: 0 0 24px 24px; flex-shrink: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); z-index: 10; position: relative;}
+        
         .stop-list-wrapper { flex: 1; overflow-y: auto; padding: 16px 24px calc(110px + var(--safe-bottom)); scroll-behavior: smooth; }
         
-        .stop-container { background: var(--surface-color); border-radius: 16px; margin-bottom: 10px; border: 1px solid var(--border-soft); padding: 16px; cursor: pointer; transition: all 0.2s ease; }
+        .stop-container { background: var(--surface-color); border-radius: 16px; margin-bottom: 10px; border: 1px solid var(--border-soft); padding: 16px; display: flex; flex-direction: column; cursor: pointer; transition: all 0.2s ease; }
         .stop-container.expanded { border-color: var(--text-secondary); }
         .stop-header { display: flex; justify-content: space-between; align-items: center; }
         .stop-name { font-weight: 500; font-size: 15px; line-height: 1.4; max-width: 85%; }
-        .stop-icon-arrow { fill: var(--text-secondary); transition: transform 0.2s; width: 20px; height: 20px; }
+        .stop-icon-arrow { fill: var(--text-secondary); transition: transform 0.2s ease; width: 20px; height: 20px; }
         .stop-container.expanded .stop-icon-arrow { transform: rotate(180deg); }
         .stop-details { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
         .stop-container.expanded .stop-details { display: block; animation: fadeIn 0.2s ease; }
@@ -138,8 +152,8 @@
         .eta-time { font-size: 15px; font-weight: 600; color: var(--text-primary); }
         .eta-time.near { color: #E63946; } 
 
-        .bottom-nav-wrapper { position: absolute; bottom: 0; left: 0; right: 0; height: calc(85px + var(--safe-bottom)); z-index: 1000; pointer-events: none; transition: transform 0.3s ease; }
-        .bottom-nav-wrapper.hide { transform: translateY(100%); }
+        /* Bottom Nav */
+        .bottom-nav-wrapper { position: absolute; bottom: 0; left: 0; right: 0; height: calc(85px + var(--safe-bottom)); z-index: 1000; pointer-events: none; }
         .nav-bg-shape { position: absolute; bottom: 0; width: 100%; height: calc(75px + var(--safe-bottom)); background: var(--nav-bg); pointer-events: auto; border-top: 1px solid var(--border-soft); }
         .nav-tabs { position: absolute; top: 10px; left: 0; right: 0; height: 65px; display: flex; justify-content: space-around; align-items: center; z-index: 1010; pointer-events: auto; }
         .nav-tab { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
@@ -149,57 +163,13 @@
         .nav-tab.active span { opacity: 0; }
         .nav-indicator { position: absolute; top: -8px; width: 56px; height: 4px; background: var(--brand-text); border-radius: 4px; left: 0; transition: left 0.3s ease; z-index: 1005; pointer-events: auto; }
 
+        /* Status UI (Replacing Emojis) */
         .status-text { text-align: center; color: var(--text-secondary); padding: 40px 20px; font-size: 14px; font-weight: 400; line-height: 1.6; }
         .status-icon { display: flex; justify-content: center; margin-bottom: 16px; color: var(--text-secondary); }
         .status-icon svg { width: 36px; height: 36px; fill: currentColor; }
         .icon-spin svg { animation: spin 1s linear infinite; }
+        
         .update-time { font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 10px; margin-bottom: 20px; }
-
-        /* Custom Keyboard Styles */
-        .custom-kb-overlay {
-            position: fixed; bottom: -100%; left: 0; right: 0; 
-            background: #D1D5DB; /* Light gray matching the image */
-            padding: 8px 6px calc(8px + var(--safe-bottom)) 6px; 
-            z-index: 2000; transition: bottom 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex; gap: 8px; flex-direction: column;
-        }
-        @media (prefers-color-scheme: dark) {
-            .custom-kb-overlay { background: #2C2C2E; }
-        }
-        .custom-kb-overlay.show { bottom: 0; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); }
-        
-        .kb-header { display: flex; justify-content: flex-end; padding: 0 8px 4px; }
-        .kb-close-btn { color: #007AFF; font-size: 15px; font-weight: 600; cursor: pointer; background: transparent; border: none; }
-        @media (prefers-color-scheme: dark) { .kb-close-btn { color: #0A84FF; } }
-        
-        .kb-body { display: flex; gap: 8px; }
-        .kb-left { flex: 4; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .kb-right { flex: 3; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-        
-        .kb-key {
-            background: #FFFFFF; border: none; border-radius: 6px;
-            font-size: 22px; font-weight: 400; color: #000;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.25); height: 50px; 
-            cursor: pointer; transition: background 0.1s, opacity 0.2s;
-            user-select: none; -webkit-user-select: none;
-        }
-        @media (prefers-color-scheme: dark) {
-            .kb-key { background: #48484A; color: #FFF; box-shadow: 0 1px 1px rgba(0,0,0,0.5); }
-        }
-        
-        .kb-key:active { background: #BCC0C6; }
-        @media (prefers-color-scheme: dark) { .kb-key:active { background: #636366; } }
-        
-        .kb-key.disabled { opacity: 0.3; pointer-events: none; }
-        
-        .kb-zero { grid-column: span 2; background: #BCC0C6; }
-        .kb-del { background: #BCC0C6; }
-        @media (prefers-color-scheme: dark) { 
-            .kb-zero, .kb-del { background: #636366; } 
-        }
-        .kb-del svg { width: 22px; height: 22px; fill: currentColor; }
-
     </style>
 </head>
 <body>
@@ -209,9 +179,9 @@
         <div class="header-section">
             <span class="greeting" id="greeting-text">早晨</span>
             <h1>搜尋路線</h1>
-            <div class="search-box" id="search-box-container">
-                <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <input type="text" id="routeSearch" placeholder="輸入路線號碼" readonly>
+            <div class="search-box">
+                <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" id="routeSearch" placeholder="輸入路線號碼或目的地" oninput="filterRoutes()">
             </div>
         </div>
         <div class="scrollable-content" id="main-list">
@@ -226,21 +196,36 @@
 
     <div id="page-nearby" class="page">
         <div class="header-section" style="padding-bottom: 0;">
-            <h1>附近車站<button class="refresh-btn" id="nearby-refresh-btn" onclick="executeNearbyRefresh(true)">重新整理</button></h1>
+            <h1>
+                附近車站
+                <button class="refresh-btn" id="nearby-refresh-btn" onclick="executeNearbyRefresh(true)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> 重新整理
+                </button>
+            </h1>
         </div>
-        <div class="scrollable-content" id="nearby-list"></div>
+        <div class="scrollable-content" id="nearby-list">
+            <div class="status-text">
+                <div class="status-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                </div>
+                請允許存取位置權限以顯示附近車站
+            </div>
+        </div>
     </div>
 
     <div id="page-details" class="page">
         <div class="back-bar">
-            <button class="back-btn" onclick="showPage('home', 0)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> 返回</button>
-            <div id="details-title"></div><div style="width: 70px;"></div>
+            <button class="back-btn" onclick="showPage('home', 0)">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> 返回
+            </button>
+            <div id="details-title"></div>
+            <div style="width: 70px;"></div>
         </div>
         <div id="map"></div>
         <div class="stop-list-wrapper" id="details-list"></div>
     </div>
 
-    <div class="bottom-nav-wrapper" id="bottom-nav">
+    <div class="bottom-nav-wrapper">
         <div class="nav-bg-shape"></div>
         <div class="nav-indicator" id="nav-ind"></div>
         <div class="nav-tabs">
@@ -258,39 +243,6 @@
             </div>
         </div>
     </div>
-
-    <div class="custom-kb-overlay" id="customKb">
-        <div class="kb-header">
-            <button class="kb-close-btn" onclick="closeKeyboard()">完成</button>
-        </div>
-        <div class="kb-body">
-            <div class="kb-left">
-                <button class="kb-key" data-val="1">1</button>
-                <button class="kb-key" data-val="2">2</button>
-                <button class="kb-key" data-val="3">3</button>
-                <button class="kb-key" data-val="4">4</button>
-                <button class="kb-key" data-val="5">5</button>
-                <button class="kb-key" data-val="6">6</button>
-                <button class="kb-key" data-val="7">7</button>
-                <button class="kb-key" data-val="8">8</button>
-                <button class="kb-key" data-val="9">9</button>
-                <button class="kb-key kb-zero" style="background:#BCC0C6;" data-val="0">0</button>
-                <button class="kb-key kb-del" data-val="del">
-                    <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
-                </button>
-            </div>
-            <div class="kb-right">
-                <button class="kb-key" data-val="A">A</button>
-                <button class="kb-key" data-val="B">B</button>
-                <button class="kb-key" data-val="C">C</button>
-                <button class="kb-key" data-val="E">E</button>
-                <button class="kb-key" data-val="H">H</button>
-                <button class="kb-key" data-val="K">K</button>
-                <button class="kb-key" data-val="N">N</button>
-                <button class="kb-key" data-val="P">P</button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -298,180 +250,542 @@
     let allRoutes = [], currentIdx = 0;
     let allStopsData = []; 
     let map = null, polyline = null, mapMarkers = L.layerGroup();
+    
     let currentStopsData = [];
     let currentRouteData = { no: '', co: '', dir: '', stype: '' };
+
     let nearbyRefreshInterval = null;
+    let nearbyGroupsCache = [];
     let isFetchingNearby = false;
 
-    // Set Greeting
+    // 向量圖示 SVG 定義
+    const icons = {
+        spinner: `<svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>`,
+        error: `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`,
+        search: `<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>`,
+        bus: `<svg viewBox="0 0 24 24"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>`,
+        location: `<svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`,
+        noLocation: `<svg viewBox="0 0 24 24"><path d="M3.27 1.04L2 2.31l3.54 3.54C5.2 6.81 5 7.85 5 9c0 5.25 7 13 7 13s1.67-1.85 3.38-4.35L18.69 21l1.27-1.27L3.27 1.04zM12 4c3.87 0 7 3.13 7 7 0 1.25-.33 2.4-1.04 3.44L12.54 9.02A2.49 2.49 0 0 0 12 6.5c-1.38 0-2.5 1.12-2.5 2.5 0 .15.02.29.04.44L6.96 6.86A6.983 6.983 0 0 1 12 4z"/></svg>`
+    };
+
     function setGreeting() {
-        const h = new Date().getHours();
-        document.getElementById('greeting-text').innerText = (h>=5 && h<12) ? "早晨" : (h>=12 && h<18) ? "午安" : "晚安";
+        const hour = new Date().getHours();
+        const textEl = document.getElementById('greeting-text');
+        if (hour >= 5 && hour < 12) textEl.innerText = "早晨";
+        else if (hour >= 12 && hour < 18) textEl.innerText = "午安";
+        else textEl.innerText = "晚安";
+    }
+
+    function formatEta(etaStr) {
+        if (!etaStr) return { label: '未有資料', isNear: false };
+        const diff = (new Date(etaStr) - new Date()) / 60000;
+        if (diff <= 1.5 && diff >= -1) return { label: '即將到達', isNear: true };
+        const min = Math.round(diff);
+        return { label: min > 0 ? `${min} 分鐘` : '已開出', isNear: false };
+    }
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; 
+        const p1 = lat1 * Math.PI/180;
+        const p2 = lat2 * Math.PI/180;
+        const dp = (lat2-lat1) * Math.PI/180;
+        const dl = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function getBadgeClass(routeNo) {
+        if (routeNo.match(/^[A|E|NA|R|S|X]/)) return 'badge-lwb';
+        return 'badge-kmb';
     }
 
     async function init() {
         setGreeting();
         setTimeout(() => moveIndicator(0), 50); 
-        initKeyboard(); // 初始化自訂鍵盤
         
         try {
             loadAllStopsInBackground();
+
             const kmbReq = fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/').then(r => r.json());
             const ctbReq = fetch('https://rt.data.gov.hk/v2/transport/citybus/route/ctb').then(r => r.json());
             const [kmbRes, ctbRes] = await Promise.allSettled([kmbReq, ctbReq]);
 
             let routeMap = {};
+
             if (kmbRes.status === 'fulfilled' && kmbRes.value.data) {
                 kmbRes.value.data.forEach(r => {
-                    let badge = r.route.match(/^[A|E|NA|R|S|X]/) ? 'badge-lwb' : 'badge-kmb';
-                    routeMap[`${r.route}-${r.bound}-${r.service_type}`] = { no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'KMB', badge: badge, dir: r.bound, stype: r.service_type };
+                    let key = `${r.route}-${r.bound}-${r.service_type}`; 
+                    routeMap[key] = {
+                        no: r.route, dest: r.dest_tc, orig: r.orig_tc, 
+                        co: 'KMB', badge: getBadgeClass(r.route), 
+                        dir: r.bound, stype: r.service_type
+                    };
                 });
             }
 
             if (ctbRes.status === 'fulfilled' && ctbRes.value.data) {
                 ctbRes.value.data.forEach(r => {
-                    const isJoint = (r.route.match(/\d+/) && parseInt(r.route.match(/\d+/)[0]) >= 100) || ['R8', 'S1'].includes(r.route);
-                    let kO = `${r.route}-O-1`, kI = `${r.route}-I-1`;
-                    if (isJoint && routeMap[kO]) { routeMap[kO].co = 'KMB+CTB'; routeMap[kO].badge = 'badge-joint'; } 
-                    else { routeMap[`${r.route}-O-CTB`] = { no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'CTB', badge: 'badge-ctb', dir: 'O', stype: '1' }; }
-                    if (isJoint && routeMap[kI]) { routeMap[kI].co = 'KMB+CTB'; routeMap[kI].badge = 'badge-joint'; } 
-                    else { routeMap[`${r.route}-I-CTB`] = { no: r.route, dest: r.orig_tc, orig: r.dest_tc, co: 'CTB', badge: 'badge-ctb', dir: 'I', stype: '1' }; }
+                    const isJointEligible = (() => {
+                        const numMatch = r.route.match(/\d+/);
+                        if (numMatch && parseInt(numMatch[0]) >= 100) return true;
+                        if (['R8', 'S1'].includes(r.route.toUpperCase())) return true;
+                        return false;
+                    })();
+
+                    let keyO = `${r.route}-O-1`; 
+                    if (isJointEligible && routeMap[keyO]) {
+                        routeMap[keyO].co = 'KMB+CTB'; 
+                        routeMap[keyO].badge = 'badge-joint';
+                    } else {
+                        routeMap[`${r.route}-O-CTB`] = { no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'CTB', badge: 'badge-ctb', dir: 'O', stype: '1' };
+                    }
+
+                    let keyI = `${r.route}-I-1`;
+                    if (isJointEligible && routeMap[keyI]) {
+                        routeMap[keyI].co = 'KMB+CTB';
+                        routeMap[keyI].badge = 'badge-joint';
+                    } else {
+                        routeMap[`${r.route}-I-CTB`] = { no: r.route, dest: r.orig_tc, orig: r.dest_tc, co: 'CTB', badge: 'badge-ctb', dir: 'I', stype: '1' };
+                    }
                 });
             }
 
-            allRoutes = Object.values(routeMap).sort((a, b) => a.no.localeCompare(b.no, undefined, { numeric: true }));
+            allRoutes = Object.values(routeMap);
+            allRoutes.sort((a, b) => a.no.localeCompare(b.no, undefined, { numeric: true, sensitivity: 'base' }));
+
             renderList(allRoutes);
-            updateKeyboardState(); // 載入路線後更新鍵盤可用狀態
-            
         } catch(e) { 
-            document.getElementById('main-list').innerHTML = `<div class="status-text">無法載入路線資料<br>請檢查網絡。</div>`; 
+            document.getElementById('main-list').innerHTML = `
+                <div class="status-text">
+                    <div class="status-icon">${icons.error}</div>
+                    無法載入路線資料<br>請檢查網絡連線。
+                </div>`; 
         }
     }
 
-    /* ====== 智能鍵盤邏輯 ====== */
-    const searchInput = document.getElementById('routeSearch');
-    const customKb = document.getElementById('customKb');
-    const bottomNav = document.getElementById('bottom-nav');
-    const kbKeys = document.querySelectorAll('.kb-key');
-
-    function initKeyboard() {
-        // 點擊搜尋框顯示鍵盤
-        document.getElementById('search-box-container').addEventListener('click', (e) => {
-            e.stopPropagation();
-            openKeyboard();
-        });
-
-        // 點擊其他地方隱藏鍵盤
-        document.addEventListener('click', (e) => {
-            if (!customKb.contains(e.target) && !document.getElementById('search-box-container').contains(e.target)) {
-                closeKeyboard();
-            }
-        });
-
-        // 按鍵事件綁定
-        kbKeys.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (btn.classList.contains('disabled')) return;
-
-                const val = btn.getAttribute('data-val');
-                let currentText = searchInput.value;
-
-                if (val === 'del') {
-                    searchInput.value = currentText.slice(0, -1);
-                } else {
-                    searchInput.value = currentText + val;
-                }
-
-                filterRoutes();
-                updateKeyboardState();
+    async function loadAllStopsInBackground() {
+        try {
+            fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop').then(r=>r.json()).then(d => {
+                if(d.data) d.data.forEach(s => allStopsData.push({ id: s.stop, name: s.name_tc, lat: s.lat, lng: s.long, co: 'KMB' }));
             });
-        });
-    }
-
-    function openKeyboard() {
-        customKb.classList.add('show');
-        bottomNav.classList.add('hide'); // 收起底部導航騰出空間
-        updateKeyboardState();
-    }
-
-    function closeKeyboard() {
-        customKb.classList.remove('show');
-        bottomNav.classList.remove('hide');
-    }
-
-    function updateKeyboardState() {
-        if(allRoutes.length === 0) return; // 尚未載入資料
-        const currentText = searchInput.value.toUpperCase();
-
-        kbKeys.forEach(btn => {
-            const val = btn.getAttribute('data-val');
-            
-            if (val === 'del') {
-                btn.classList.toggle('disabled', currentText.length === 0);
-                return;
-            }
-
-            const testVal = currentText + val;
-            // 核心智能預測：比對是否仍有路線包含這些字元
-            const hasMatch = allRoutes.some(r => r.no.includes(testVal));
-            
-            if (hasMatch) {
-                btn.classList.remove('disabled');
-            } else {
-                btn.classList.add('disabled');
-            }
-        });
+            fetch('https://rt.data.gov.hk/v2/transport/citybus/stop').then(r=>r.json()).then(d => {
+                if(d.data) d.data.forEach(s => allStopsData.push({ id: s.stop, name: s.name_tc, lat: s.lat, lng: s.long, co: 'CTB' }));
+            });
+        } catch(e) {}
     }
 
     function renderList(list) {
         const container = document.getElementById('main-list');
-        if(!list.length) { container.innerHTML = `<div class="status-text">找不到相關路線</div>`; return; }
+        if(!list.length) { 
+            container.innerHTML = `
+                <div class="status-text">
+                    <div class="status-icon">${icons.search}</div>
+                    找不到相關路線
+                </div>`; 
+            return; 
+        }
+        
         container.innerHTML = list.map(r => `
             <div class="route-item" onclick="openRoute('${r.no}', '${r.co}', '${r.dir}', '${r.stype}', '${r.dest}')">
                 <div class="route-badge ${r.badge}">${r.no}</div>
                 <div class="route-info">
                     <div class="route-dest">往 ${r.dest}</div>
-                    <div class="route-sub"><span style="background:var(--border-soft); padding:2px 6px; border-radius:4px; font-size:11px;">${r.co === 'KMB+CTB' ? '聯營' : r.co}</span> 由 ${r.orig} 出發</div>
+                    <div class="route-sub">
+                        <span style="background:var(--border-soft); padding:2px 6px; border-radius:4px; font-size:11px;">
+                            ${r.co === 'KMB+CTB' ? '聯營' : r.co}
+                        </span> 
+                        由 ${r.orig} 出發
+                    </div>
                 </div>
             </div>`).join('');
     }
 
     function filterRoutes() {
-        const q = searchInput.value.toUpperCase().trim();
+        const q = document.getElementById('routeSearch').value.toUpperCase().trim();
         if (!q) { renderList(allRoutes); return; }
-        const filtered = allRoutes.filter(r => r.no.includes(q)); // 由於自訂鍵盤只能打數字跟特定字母，移除目的地搜尋以提升精準度
+        const filtered = allRoutes.filter(r => r.no.includes(q) || r.dest.includes(q));
         renderList(filtered);
     }
 
-    /* ====== 其他頁面邏輯保持不變 (配合省略) ====== */
-    async function loadAllStopsInBackground() {
+    function startNearbyLogic() {
+        const listEl = document.getElementById('nearby-list');
+        const btn = document.getElementById('nearby-refresh-btn');
+        btn.style.display = 'flex';
+
+        if (allStopsData.length === 0) {
+            listEl.innerHTML = `
+                <div class="status-text">
+                    <div class="status-icon icon-spin">${icons.spinner}</div>
+                    正在準備車站數據...
+                </div>`;
+            return;
+        }
+
+        listEl.innerHTML = `
+            <div class="status-text">
+                <div class="status-icon icon-spin">${icons.spinner}</div>
+                正在定位您的位置...
+            </div>`;
+        
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => { executeNearbyRefresh(false, pos.coords.latitude, pos.coords.longitude); },
+                (err) => { 
+                    listEl.innerHTML = `
+                        <div class="status-text">
+                            <div class="status-icon">${icons.noLocation}</div>
+                            無法取得位置<br>請確定已開啟定位權限。
+                        </div>`; 
+                },
+                { timeout: 5000, enableHighAccuracy: true }
+            );
+        } else {
+            listEl.innerHTML = `
+                <div class="status-text">
+                    <div class="status-icon">${icons.error}</div>
+                    您的裝置不支援定位功能。
+                </div>`;
+        }
+
+        if(nearbyRefreshInterval) clearInterval(nearbyRefreshInterval);
+        nearbyRefreshInterval = setInterval(() => { executeNearbyRefresh(true); }, 30000);
+    }
+
+    function stopNearbyLogic() {
+        if(nearbyRefreshInterval) {
+            clearInterval(nearbyRefreshInterval);
+            nearbyRefreshInterval = null;
+        }
+        document.getElementById('nearby-refresh-btn').style.display = 'none';
+    }
+
+    let lastLat = 0, lastLng = 0;
+
+    async function executeNearbyRefresh(isRefresh = false, lat = null, lng = null) {
+        if (isFetchingNearby) return;
+        isFetchingNearby = true;
+        const btn = document.getElementById('nearby-refresh-btn');
+        btn.classList.add('spinning');
+        
+        if(lat) lastLat = lat;
+        if(lng) lastLng = lng;
+
         try {
-            fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop').then(r=>r.json()).then(d => { if(d.data) d.data.forEach(s => allStopsData.push({ id: s.stop, name: s.name_tc, lat: s.lat, lng: s.long, co: 'KMB' })); });
-            fetch('https://rt.data.gov.hk/v2/transport/citybus/stop').then(r=>r.json()).then(d => { if(d.data) d.data.forEach(s => allStopsData.push({ id: s.stop, name: s.name_tc, lat: s.lat, lng: s.long, co: 'CTB' })); });
-        } catch(e) {}
+            // Group stops within 800m
+            let groupsMap = {};
+            allStopsData.forEach(s => {
+                let d = getDistance(lastLat, lastLng, s.lat, s.lng);
+                if (d < 800) {
+                    if(!groupsMap[s.name]) groupsMap[s.name] = { name: s.name, dist: d, kmbIds: [], ctbIds: [] };
+                    if(s.co === 'KMB' && !groupsMap[s.name].kmbIds.includes(s.id)) groupsMap[s.name].kmbIds.push(s.id);
+                    if(s.co === 'CTB' && !groupsMap[s.name].ctbIds.includes(s.id)) groupsMap[s.name].ctbIds.push(s.id);
+                    if(d < groupsMap[s.name].dist) groupsMap[s.name].dist = d; 
+                }
+            });
+
+            nearbyGroupsCache = Object.values(groupsMap).sort((a, b) => a.dist - b.dist).slice(0, 5); 
+            
+            const listEl = document.getElementById('nearby-list');
+            
+            if (nearbyGroupsCache.length === 0) {
+                listEl.innerHTML = `
+                    <div class="status-text">
+                        <div class="status-icon">${icons.bus}</div>
+                        半徑 800 米內找不到任何巴士站。
+                    </div>`;
+                isFetchingNearby = false;
+                btn.classList.remove('spinning');
+                return;
+            }
+
+            if (!isRefresh) {
+                listEl.innerHTML = nearbyGroupsCache.map((g, idx) => `
+                    <div class="nearby-group" id="ng-${idx}">
+                        <div class="nearby-header">
+                            <div class="nearby-name">${g.name}</div>
+                            <div class="nearby-dist">${Math.round(g.dist)}m</div>
+                        </div>
+                        <div id="ng-content-${idx}" style="text-align:center; padding:10px; color:var(--text-secondary); font-size:13px;">載入中...</div>
+                    </div>
+                `).join('') + `<div class="update-time" id="nearby-update-time"></div>`;
+            }
+
+            for (let i = 0; i < nearbyGroupsCache.length; i++) {
+                let g = nearbyGroupsCache[i];
+                let promises = [];
+                let rawEtas = [];
+
+                g.kmbIds.forEach(id => {
+                    promises.push(fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${id}`).then(r=>r.json()).then(res => {
+                        if(res.data) rawEtas.push(...res.data.filter(e => e.eta).map(e => ({ route: e.route, dest: e.dest_tc, eta: e.eta, co: 'KMB' })));
+                    }).catch(()=>{}));
+                });
+
+                g.ctbIds.forEach(id => {
+                    promises.push(fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${id}`).then(r=>r.json()).then(res => {
+                        if(res.data) rawEtas.push(...res.data.filter(e => e.eta).map(e => ({ route: e.route, dest: e.dest_tc, eta: e.eta, co: 'CTB' })));
+                    }).catch(()=>{}));
+                });
+
+                await Promise.all(promises);
+
+                let routeMap = {};
+                rawEtas.forEach(e => {
+                    let key = `${e.route}-${e.dest}`;
+                    if(!routeMap[key]) routeMap[key] = { route: e.route, dest: e.dest, co: e.co, etas: [] };
+                    
+                    let time = new Date(e.eta).getTime();
+                    let isDup = routeMap[key].etas.some(ext => Math.abs(new Date(ext).getTime() - time) < 60000);
+                    if(!isDup) routeMap[key].etas.push(e.eta);
+                    
+                    if(routeMap[key].co !== e.co) routeMap[key].co = 'Joint';
+                });
+
+                let routesList = Object.values(routeMap);
+                routesList.forEach(r => r.etas.sort((a,b) => new Date(a) - new Date(b)));
+                routesList.sort((a,b) => a.route.localeCompare(b.route, undefined, {numeric: true}));
+
+                const contentEl = document.getElementById(`ng-content-${i}`);
+                if(contentEl) {
+                    if(routesList.length === 0) {
+                        contentEl.innerHTML = `<div class="eta-empty" style="text-align:center;">現時未有班次</div>`;
+                    } else {
+                        contentEl.innerHTML = routesList.map(r => {
+                            let badgeClass = r.co === 'Joint' ? 'badge-joint' : (r.co === 'CTB' ? 'badge-ctb' : getBadgeClass(r.route));
+                            let etasHtml = r.etas.slice(0, 3).map(eta => {
+                                let timeObj = formatEta(eta);
+                                return `<span class="eta-pill ${timeObj.isNear ? 'near' : ''}">${timeObj.label}</span>`;
+                            }).join('');
+                            
+                            return `
+                            <div class="nearby-row">
+                                <div class="route-badge small ${badgeClass}">${r.route}</div>
+                                <div class="route-info">
+                                    <div class="route-dest" style="font-size:15px;">往 ${r.dest}</div>
+                                    <div class="nearby-etas">${etasHtml}</div>
+                                </div>
+                            </div>`;
+                        }).join('');
+                        contentEl.style.textAlign = 'left';
+                    }
+                }
+            }
+
+            const timeEl = document.getElementById('nearby-update-time');
+            if(timeEl) {
+                let now = new Date();
+                timeEl.innerText = `最後更新: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+            }
+
+        } catch (error) {
+            console.error(error);
+        }
+
+        isFetchingNearby = false;
+        btn.classList.remove('spinning');
     }
 
-    function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3, p1 = lat1 * Math.PI/180, p2 = lat2 * Math.PI/180, dp = (lat2-lat1) * Math.PI/180, dl = (lon2-lon1) * Math.PI/180;
-        const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-
-    // 簡化版的路線圖跳轉，保持架構完整
-    function openRoute(no, co, dir, stype, dest) {
-        closeKeyboard(); // 進入詳細頁面時確保收起鍵盤
+    async function openRoute(no, co, dir, stype, dest) {
         currentRouteData = { no, co, dir, stype };
         showPage('details', 2);
         document.getElementById('details-title').innerText = no;
-        document.getElementById('details-list').innerHTML = `<div class="status-text">路線圖準備中...</div>`;
+        const listEl = document.getElementById('details-list');
+        listEl.innerHTML = `
+            <div class="status-text">
+                <div class="status-icon icon-spin">${icons.spinner}</div>
+                正在繪製路線圖...
+            </div>`;
+
+        if(!map) {
+            map = L.map('map', {zoomControl: false, attributionControl: false});
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+        }
+        mapMarkers.clearLayers();
+        if(polyline) map.removeLayer(polyline);
+
+        try {
+            let stops = [];
+            let kDir = (dir === 'I') ? 'inbound' : 'outbound';
+            let cDir = (dir === 'I') ? 'inbound' : 'outbound';
+            
+            if (co.includes('KMB')) {
+                const s = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${no}/${kDir}/${stype}`).then(r => r.json());
+                
+                for (let i = 0; i < s.data.length; i += 15) {
+                    const batch = s.data.slice(i, i + 15).map(async (item) => {
+                        const info = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop/${item.stop}`).then(r => r.json());
+                        return { id: item.stop, name: info.data.name_tc, lat: info.data.lat, lng: info.data.long };
+                    });
+                    stops.push(...(await Promise.all(batch)));
+                }
+
+                if (co === 'KMB+CTB') {
+                    try {
+                        const cRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${no}/${cDir}`).then(r => r.json());
+                        if (cRes.data) {
+                            stops.forEach((st, i) => { if (cRes.data[i]) st.ctb_id = cRes.data[i].stop; });
+                        }
+                    } catch(e) {}
+                }
+            } 
+            else if (co === 'CTB') {
+                const s = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${no}/${cDir}`).then(r => r.json());
+                
+                for (let i = 0; i < s.data.length; i += 15) {
+                    const batch = s.data.slice(i, i + 15).map(async (item) => {
+                        const info = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${item.stop}`).then(r => r.json());
+                        return { id: item.stop, name: info.data.name_tc, lat: info.data.lat, lng: info.data.long };
+                    });
+                    stops.push(...(await Promise.all(batch)));
+                }
+            }
+
+            currentStopsData = stops;
+
+            listEl.innerHTML = stops.map((s, i) => `
+                <div class="stop-container" id="stop-box-${i}" onclick="toggleStop(${i})">
+                    <div class="stop-header">
+                        <div class="stop-name"><span style="color:var(--text-secondary); margin-right:8px; font-size:13px;">${i+1}</span> ${s.name}</div>
+                        <svg class="stop-icon-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                    </div>
+                    <div class="stop-details" id="stop-details-${i}"></div>
+                </div>
+            `).join('');
+
+            const pts = stops.map(s => [s.lat, s.lng]).filter(p => !isNaN(p[0]));
+            if (pts.length > 0) {
+                polyline = L.polyline(pts, {color: '#FFCC00', weight: 6, opacity: 0.9, lineCap: 'round', lineJoin: 'round'}).addTo(map);
+                stops.forEach(s => {
+                    if(!isNaN(s.lat)) {
+                        s.marker = L.circleMarker([s.lat, s.lng], {radius: 4, color: '#FFFFFF', fillColor: '#FFCC00', fillOpacity: 1, weight: 2}).addTo(mapMarkers);
+                    }
+                });
+                mapMarkers.addTo(map);
+                map.fitBounds(polyline.getBounds(), {padding: [40, 40]});
+            }
+
+            locateNearestStopAndOpen(stops);
+
+        } catch(e) { 
+            listEl.innerHTML = `
+                <div class="status-text">
+                    <div class="status-icon">${icons.error}</div>
+                    暫時未能獲取路線數據。
+                </div>`; 
+        }
+    }
+
+    function locateNearestStopAndOpen(stops) {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    let minD = Infinity, nearestIdx = 0;
+                    stops.forEach((s, i) => {
+                        if(!isNaN(s.lat)) {
+                            let d = getDistance(pos.coords.latitude, pos.coords.longitude, s.lat, s.lng);
+                            if (d < minD) { minD = d; nearestIdx = i; }
+                        }
+                    });
+                    toggleStop(nearestIdx);
+                },
+                (err) => { toggleStop(0); },
+                { timeout: 3000 }
+            );
+        } else {
+            toggleStop(0);
+        }
+    }
+
+    async function toggleStop(idx) {
+        document.querySelectorAll('.stop-container').forEach(el => el.classList.remove('expanded'));
+        const targetBox = document.getElementById(`stop-box-${idx}`);
+        targetBox.classList.add('expanded');
+        
+        setTimeout(() => targetBox.scrollIntoView({behavior: "smooth", block: "center"}), 100);
+
+        const stop = currentStopsData[idx];
+        const detailsEl = document.getElementById(`stop-details-${idx}`);
+        detailsEl.innerHTML = `<div style="text-align:center; padding:10px; font-size:13px; color:var(--text-secondary);">載入中...</div>`;
+
+        if(stop.lat && !isNaN(stop.lat)) {
+            map.flyTo([stop.lat, stop.lng], 16, { animate: true, duration: 0.8 });
+            currentStopsData.forEach(s => {
+                if(s.marker) s.marker.setStyle({fillColor: '#FFCC00', radius: 4, weight: 2});
+            });
+            if(stop.marker) {
+                stop.marker.setStyle({fillColor: '#E63946', radius: 7, weight: 3});
+                stop.marker.bringToFront();
+            }
+        }
+
+        try {
+            let validEtas = [];
+            let promises = [];
+            const { no, co, dir } = currentRouteData;
+
+            if (co.includes('KMB') && stop.id) {
+                promises.push(fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stop.id}`).then(r=>r.json()).then(res => {
+                    if (res.data) {
+                        let etas = res.data.filter(e => e.route === no && e.dir === dir && e.eta);
+                        validEtas.push(...etas.map(e => ({ eta: e.eta, rmk: e.rmk_tc, co: '九巴' })));
+                    }
+                }).catch(()=>{}));
+            }
+
+            if (co.includes('CTB') && (stop.ctb_id || co === 'CTB')) {
+                let cid = stop.ctb_id || stop.id; 
+                promises.push(fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${cid}/${no}`).then(r=>r.json()).then(res => {
+                    if (res.data) {
+                        let etas = res.data.filter(e => e.dir === dir && e.eta);
+                        validEtas.push(...etas.map(e => ({ eta: e.eta, rmk: e.rmk_tc, co: '城巴' })));
+                    }
+                }).catch(()=>{}));
+            }
+
+            await Promise.all(promises);
+            validEtas.sort((a,b) => new Date(a.eta) - new Date(b.eta));
+
+            let uniqueEtas = [];
+            validEtas.forEach(e => {
+                let time = new Date(e.eta).getTime();
+                let isDuplicate = uniqueEtas.some(u => Math.abs(new Date(u.eta).getTime() - time) < 60000);
+                if (!isDuplicate) uniqueEtas.push(e);
+            });
+
+            const top3 = uniqueEtas.slice(0, 3);
+            
+            if (top3.length === 0) {
+                detailsEl.innerHTML = `<div style="text-align:center; color:var(--text-secondary); font-size:13px; padding:10px;">現時未有班次資料</div>`;
+            } else {
+                detailsEl.innerHTML = top3.map((e, i) => {
+                    let timeObj = formatEta(e.eta);
+                    let coTag = co === 'KMB+CTB' ? `<span style="font-size:10px; padding:2px 5px; border-radius:4px; background:var(--border-soft); margin-right:4px;">${e.co}</span>` : '';
+                    return `
+                    <div class="eta-row">
+                        <span class="eta-remark">
+                            第 ${i+1} 班 
+                            <div style="display:inline-block; margin-left:4px;">
+                                ${coTag}
+                                ${e.rmk ? `<span style="opacity:0.6; font-size:12px;">(${e.rmk})</span>` : ''}
+                            </div>
+                        </span>
+                        <span class="eta-time ${timeObj.isNear ? 'near' : ''}">${timeObj.label}</span>
+                    </div>`;
+                }).join('');
+            }
+        } catch(e) {
+            detailsEl.innerHTML = `<div style="text-align:center; color:var(--text-secondary); font-size:13px; padding:10px;">連線失敗</div>`;
+        }
     }
 
     function moveIndicator(idx) {
         const activeTab = document.getElementById('tab-' + idx);
         const ind = document.getElementById('nav-ind');
         if (!activeTab || !ind) return;
-        const centerPos = (activeTab.getBoundingClientRect().left - document.querySelector('.nav-tabs').getBoundingClientRect().left) + (activeTab.getBoundingClientRect().width / 2);
+        const container = document.querySelector('.nav-tabs');
+        const tabRect = activeTab.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const centerPos = (tabRect.left - containerRect.left) + (tabRect.width / 2);
         ind.style.left = (centerPos - (ind.offsetWidth / 2)) + 'px';
     }
 
@@ -480,8 +794,17 @@
         document.getElementById('page-' + id).classList.add('active');
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
         document.getElementById('tab-' + idx).classList.add('active');
-        currentIdx = idx; moveIndicator(idx);
-        if(id !== 'home') closeKeyboard(); // 切換頁面時收起鍵盤
+        
+        currentIdx = idx;
+        moveIndicator(idx);
+        
+        if (id === 'details' && map) setTimeout(() => map.invalidateSize(), 10);
+        
+        if (id === 'nearby') {
+            startNearbyLogic();
+        } else {
+            stopNearbyLogic();
+        }
     }
 
     window.addEventListener('resize', () => requestAnimationFrame(() => moveIndicator(currentIdx)));
