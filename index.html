@@ -44,7 +44,6 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "PingFang HK", sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* Added touch-action: manipulation to lock double-tap zoom */
         body { background-color: var(--bg-color); color: var(--text-primary); height: 100dvh; overflow: hidden; transition: background-color 0.4s ease; touch-action: manipulation; }
 
         .app-container { width: 100%; height: 100dvh; display: flex; flex-direction: column; position: relative; }
@@ -113,7 +112,6 @@
         .route-dest { font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
         .route-sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; font-weight: 400; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
         
-        /* New Inline Company Tag Style */
         .route-co-text-inline {
             background: var(--border-soft);
             padding: 3px 6px;
@@ -171,7 +169,6 @@
         .nav-tab span { font-size: 11px; font-weight: 500; color: var(--nav-icon); margin-top: 4px; transition: opacity 0.3s; }
         .nav-tab.active svg { transform: translateY(-16px); fill: var(--brand-text); }
         .nav-tab.active span { opacity: 0; }
-        /* Adjusted Line Indicator to below the icon */
         .nav-indicator { position: absolute; bottom: 10px; top: auto; width: 32px; height: 4px; background: var(--brand-text); border-radius: 4px; left: 0; transition: left 0.3s ease, opacity 0.3s; z-index: 1005; pointer-events: auto; }
 
         /* Status UI */
@@ -189,14 +186,41 @@
         .kb-body { display: flex; gap: 8px; }
         .kb-left { flex: 4; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
         .kb-right { flex: 3; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; overflow-y: auto; max-height: 218px; }
-        .kb-key { background: #FFF; border-radius: 6px; font-size: 22px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 1px rgba(0,0,0,0.2); cursor: pointer; border: none; font-weight: 500; color: #000; }
+        
+        /* Updated kb-key for Ripple */
+        .kb-key { 
+            background: #FFF; border-radius: 6px; font-size: 22px; height: 50px; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2); cursor: pointer; border: none; 
+            font-weight: 500; color: #000; 
+            position: relative; 
+            overflow: hidden; 
+        }
         @media (prefers-color-scheme: dark) { .kb-key { background: #48484A; color: #FFF; } }
         .kb-key.disabled { opacity: 0.2; pointer-events: none; }
         
-        /* Fixed keyboard 0 key color to match 1-9 */
         .kb-zero { grid-column: span 2; }
         .kb-del { background: #BCC0C6; } 
         @media (prefers-color-scheme: dark) { .kb-del { background: #636366; } }
+
+        /* Ripple Effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(150, 150, 150, 0.4);
+            transform: scale(0);
+            animation: ripple-anim 0.4s ease-out;
+            pointer-events: none;
+        }
+        @media (prefers-color-scheme: dark) {
+            .ripple { background: rgba(255, 255, 255, 0.2); }
+        }
+        @keyframes ripple-anim {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -370,7 +394,6 @@
         try {
             loadAllStopsInBackground();
 
-            // Fetch All Providers
             const kmbReq = fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/').then(r => r.json());
             const ctbReq = fetch('https://rt.data.gov.hk/v2/transport/citybus/route/ctb').then(r => r.json());
             const nlbReq = fetch('https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list').then(r => r.json());
@@ -382,7 +405,6 @@
 
             let routeMap = {};
 
-            // 1. Process KMB
             if (kmbRes.status === 'fulfilled' && kmbRes.value.data) {
                 kmbRes.value.data.forEach(r => {
                     let key = `${r.route}-${r.bound}-${r.service_type}`; 
@@ -393,7 +415,6 @@
                 });
             }
 
-            // 2. Process CTB
             if (ctbRes.status === 'fulfilled' && ctbRes.value.data) {
                 ctbRes.value.data.forEach(r => {
                     const isJointEligible = (() => {
@@ -419,7 +440,6 @@
                 });
             }
 
-            // 3. Process NLB
             if (nlbRes.status === 'fulfilled' && nlbRes.value.routes) {
                 nlbRes.value.routes.forEach(r => {
                     let parts = r.routeName_c.split(/[-\>]/);
@@ -432,11 +452,9 @@
                 });
             }
 
-            // 4. Process GMB (HKI, KLN, NT)
             [gmbResH, gmbResK, gmbResN].forEach(res => {
                 if(res.status === 'fulfilled' && res.value.data) {
                     res.value.data.forEach(r => {
-                        // Extract routes originating and destinations for Minibus properly
                         if (r.description_tc) {
                             let parts = r.description_tc.split(' - ');
                             if (parts.length === 1) parts = r.description_tc.split('-');
@@ -482,6 +500,29 @@
         "ABCDEFG HKMNPRST WXYZ".replace(/ /g,'').split('').forEach(l => alphaPad.innerHTML += `<button class="kb-key" data-val="${l}">${l}</button>`);
 
         document.querySelectorAll('.kb-key').forEach(k => {
+            // 加入漣漪效果的事件監聽
+            k.addEventListener('pointerdown', function(e) {
+                if (this.classList.contains('disabled')) return;
+                
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                
+                // 建立漣漪元素
+                const circle = document.createElement('span');
+                circle.style.width = circle.style.height = `${size}px`;
+                
+                // 計算點擊位置的相對座標
+                circle.style.left = `${e.clientX - rect.left - size / 2}px`;
+                circle.style.top = `${e.clientY - rect.top - size / 2}px`;
+                circle.classList.add('ripple');
+                
+                this.appendChild(circle);
+                
+                // 動畫結束後移除元素 (0.4s)
+                setTimeout(() => circle.remove(), 400);
+            });
+
+            // 原本的按鈕邏輯
             k.onclick = (e) => {
                 e.stopPropagation();
                 const input = document.getElementById('routeSearch');
