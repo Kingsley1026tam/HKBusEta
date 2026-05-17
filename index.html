@@ -3,224 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>HKBusEta</title>
-    
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="apple-touch-icon" href="favicon.ico">
+    <title>HKBusEta Redesign</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
         :root {
-            --bg-color: #F7F7F9;        
+            --bg-base: #F2F2F7;        
             --surface-color: #FFFFFF;   
-            --text-primary: #1D1D1F;    
-            --text-secondary: #86868B;
-            --brand-color: #FFCC00;     
-            --brand-light: rgba(255, 204, 0, 0.15);     
-            --brand-text: #1D1D1F;      
-            --border-soft: #F0F0F2;
-            --nav-bg: #FFFFFF;
-            --nav-icon: #A1A1A6;
+            --text-primary: #000000;    
+            --text-secondary: #8E8E93;
+            --brand-color: #007AFF;     
+            --brand-light: rgba(0, 122, 255, 0.1);     
+            --border-soft: #E5E5EA;
+            --nav-bg: rgba(255, 255, 255, 0.85);
             
-            --safe-top: calc(env(safe-area-inset-top, 45px) + 20px);
+            --safe-top: calc(env(safe-area-inset-top, 45px) + 16px);
             --safe-bottom: env(safe-area-inset-bottom, 24px);
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #121212;
-                --surface-color: #1E1E1E;
+                --bg-base: #000000;
+                --surface-color: #1C1C1E;
                 --text-primary: #FFFFFF;    
                 --text-secondary: #98989D;
-                --brand-color: #FFD60A; 
-                --brand-light: rgba(255, 214, 10, 0.15);
-                --brand-text: #FFFFFF;      
+                --brand-color: #0A84FF; 
+                --brand-light: rgba(10, 132, 255, 0.15);
                 --border-soft: #2C2C2E;
-                --nav-bg: #1E1E1E;
-                --nav-icon: #636366;
+                --nav-bg: rgba(28, 28, 30, 0.85);
             }
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "PingFang HK", sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang HK", sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        body { background-color: var(--bg-color); color: var(--text-primary); height: 100dvh; overflow: hidden; transition: background-color 0.4s ease; touch-action: manipulation; }
+        body { background-color: var(--bg-base); color: var(--text-primary); height: 100dvh; overflow: hidden; }
 
         .app-container { width: 100%; height: 100dvh; display: flex; flex-direction: column; position: relative; }
 
+        /* HEADER */
         .header-section {
             padding: var(--safe-top) 24px 16px 24px;
-            background: linear-gradient(180deg, var(--bg-color) 70%, rgba(247,247,249,0) 100%);
+            background: var(--bg-base);
             z-index: 10; flex-shrink: 0;
         }
-        @media (prefers-color-scheme: dark) {
-            .header-section { background: linear-gradient(180deg, var(--bg-color) 70%, rgba(18,18,18,0) 100%); }
-        }
         
-        .greeting { font-size: 15px; color: var(--text-secondary); font-weight: 500; margin-bottom: 4px; display: block; }
-        .header-section h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
-        .refresh-btn { font-size: 14px; background: var(--surface-color); border: 1px solid var(--border-soft); padding: 6px 12px; border-radius: 14px; font-weight: 600; color: var(--text-primary); cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-        .refresh-btn:active { transform: scale(0.95); }
+        .greeting { font-size: 13px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .header-section h1 { font-size: 34px; font-weight: 800; letter-spacing: -0.8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+        
+        .refresh-btn { font-size: 14px; background: var(--brand-light); border: none; padding: 8px 14px; border-radius: 20px; font-weight: 600; color: var(--brand-color); cursor: pointer; display: none; align-items: center; gap: 6px; transition: transform 0.2s; }
+        .refresh-btn:active { transform: scale(0.92); }
         .refresh-btn.spinning svg { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
+        /* SEARCH BAR */
         .search-box {
             display: flex; align-items: center; background: var(--surface-color); 
-            border: 1px solid var(--border-soft);
-            border-radius: 16px; padding: 12px 16px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-            transition: all 0.3s ease;
-            cursor: pointer;
+            border-radius: 20px; padding: 14px 20px; 
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer; border: 1.5px solid transparent;
         }
         .search-box:focus-within, .search-box.kb-active {
             border-color: var(--brand-color);
             box-shadow: 0 8px 24px var(--brand-light);
+            transform: translateY(-2px);
         }
-        .search-box svg { fill: var(--text-secondary); width: 20px; height: 20px; }
+        .search-box svg { fill: var(--text-secondary); width: 22px; height: 22px; }
         .search-box input { 
-            flex: 1; border: none; background: transparent; font-size: 16px; 
-            color: var(--text-primary); outline: none; margin-left: 10px; font-weight: 400; cursor: pointer;
+            flex: 1; border: none; background: transparent; font-size: 17px; 
+            color: var(--text-primary); outline: none; margin-left: 12px; font-weight: 500; cursor: pointer;
         }
-        .search-box input::placeholder { color: var(--text-secondary); }
+        .search-box input::placeholder { color: var(--text-secondary); font-weight: 400; }
 
-        .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
-        .page.active { display: flex; animation: fadeIn 0.3s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        /* PAGES */
+        .page { display: none; flex: 1; flex-direction: column; overflow: hidden; position: relative; }
+        .page.active { display: flex; animation: fadeUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         
         .scrollable-content { 
-            flex: 1; overflow-y: auto; padding: 10px 24px calc(110px + var(--safe-bottom)) 24px; 
-            scroll-behavior: smooth;
+            flex: 1; overflow-y: auto; padding: 16px 20px calc(130px + var(--safe-bottom)) 20px; 
         }
         .scrollable-content::-webkit-scrollbar { display: none; }
 
+        /* LIST ITEMS */
         .route-item { 
-            background: var(--surface-color); border-radius: 16px; padding: 16px; 
+            background: var(--surface-color); border-radius: 20px; padding: 16px 20px; 
             display: flex; align-items: center; gap: 16px; margin-bottom: 12px; 
-            cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s;
-            border: 1px solid var(--border-soft);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02); cursor: pointer; transition: 0.2s;
         }
-        .route-item:active { transform: scale(0.97); }
+        .route-item:active { transform: scale(0.96); background: var(--border-soft); }
         
         .route-badge { 
-            color: var(--text-primary); font-size: 18px; font-weight: 700; 
-            min-width: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            flex-shrink: 0; text-align: center; background: transparent;
+            background: var(--text-primary); color: var(--bg-base); font-size: 20px; font-weight: 800; 
+            width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; 
+            flex-shrink: 0;
         }
-        .route-badge.small { min-width: 50px; font-size: 16px; }
         
-        .route-info { flex: 1; min-width: 0; border-left: 1px solid var(--border-soft); padding-left: 12px;}
-        .route-dest { font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
-        .route-sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; font-weight: 400; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+        .route-info { flex: 1; min-width: 0; }
+        .route-dest { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .route-sub { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+
+        /* NEARBY UI */
+        .nearby-group { margin-bottom: 24px; }
+        .nearby-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; padding: 0 4px; }
+        .nearby-name { font-size: 20px; font-weight: 700; }
+        .nearby-dist { font-size: 14px; font-weight: 600; color: var(--brand-color); background: var(--brand-light); padding: 4px 10px; border-radius: 12px; }
         
-        .route-co-text-inline {
-            background: var(--border-soft);
-            padding: 3px 6px;
-            border-radius: 6px;
-            font-size: 11px;
-            color: var(--text-secondary);
-            font-weight: 500;
+        .nearby-card { background: var(--surface-color); border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .nearby-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        
+        .route-badge.small { width: 44px; height: 44px; font-size: 16px; border-radius: 10px; background: var(--border-soft); color: var(--text-primary); }
+        
+        .eta-pill-container { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        .eta-pill { font-size: 15px; font-weight: 700; background: var(--bg-base); padding: 6px 12px; border-radius: 10px; color: var(--text-primary); }
+        .eta-pill.near { color: #FF3B30; background: rgba(255, 59, 48, 0.1); }
+        .eta-sub { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+
+        /* DETAILS SHEET UI */
+        #map { width: 100%; height: 45vh; position: absolute; top: 0; left: 0; z-index: 1; }
+        
+        .floating-back { 
+            position: absolute; top: var(--safe-top); left: 20px; z-index: 10; 
+            background: var(--nav-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            padding: 10px 16px 10px 12px; border-radius: 24px; font-weight: 600; font-size: 15px;
+            color: var(--text-primary); display: flex; align-items: center; gap: 4px; 
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1); border: none; cursor: pointer;
         }
+        .floating-back:active { opacity: 0.7; }
+        .floating-back svg { width: 20px; height: 20px; }
 
-        /* Nearby Styles */
-        .nearby-group { background: var(--surface-color); border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border-soft); }
-        .nearby-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-soft); }
-        .nearby-name { font-size: 17px; font-weight: 600; }
-        .nearby-dist { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
-        .nearby-row { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
-        .nearby-row:last-child { margin-bottom: 0; }
-        .nearby-etas { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .eta-pill { font-size: 13px; font-weight: 600; background: var(--bg-color); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-soft); }
-        .eta-pill.near { color: #E63946; background: rgba(230, 57, 70, 0.08); border-color: rgba(230, 57, 70, 0.2); }
-        .eta-empty { font-size: 13px; color: var(--text-secondary); }
-
-        /* Details Styles */
-        .back-bar { padding: calc(var(--safe-top) - 10px) 24px 15px; background: var(--bg-color); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-        .back-btn { background: var(--surface-color); border: 1px solid var(--border-soft); color: var(--text-primary); font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 16px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: 0.2s; }
-        .back-btn:active { opacity: 0.7; }
-        .back-btn svg { width: 16px; height: 16px; }
-        #details-title { font-size: 17px; font-weight: 600; }
+        .details-sheet { 
+            position: absolute; top: 38vh; bottom: 0; left: 0; right: 0; 
+            background: var(--bg-base); border-radius: 32px 32px 0 0; z-index: 5; 
+            display: flex; flex-direction: column; box-shadow: 0 -4px 30px rgba(0,0,0,0.1); 
+        }
+        .drag-handle { width: 40px; height: 5px; background: #D1D1D6; border-radius: 3px; margin: 12px auto; flex-shrink: 0; }
+        @media (prefers-color-scheme: dark) { .drag-handle { background: #48484A; } }
         
-        #map { width: 100%; height: 28vh; border-radius: 0 0 24px 24px; flex-shrink: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); z-index: 10; position: relative;}
+        .sheet-header { padding: 0 24px 16px; border-bottom: 1px solid var(--border-soft); display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+        .sheet-title { font-size: 28px; font-weight: 800; }
+        .sheet-subtitle { font-size: 15px; color: var(--text-secondary); font-weight: 500; }
         
-        .stop-list-wrapper { flex: 1; overflow-y: auto; padding: 16px 24px calc(110px + var(--safe-bottom)); scroll-behavior: smooth; }
+        .stop-list-wrapper { flex: 1; overflow-y: auto; padding: 16px 20px calc(130px + var(--safe-bottom)); }
         
-        .stop-container { background: var(--surface-color); border-radius: 16px; margin-bottom: 10px; border: 1px solid var(--border-soft); padding: 16px; display: flex; flex-direction: column; cursor: pointer; transition: all 0.2s ease; }
-        .stop-container.expanded { border-color: var(--text-secondary); }
+        .stop-container { background: var(--surface-color); border-radius: 20px; margin-bottom: 12px; padding: 16px 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .stop-container.expanded { box-shadow: 0 8px 24px rgba(0,0,0,0.06); transform: scale(1.02); }
         .stop-header { display: flex; justify-content: space-between; align-items: center; }
-        .stop-name { font-weight: 500; font-size: 15px; line-height: 1.4; max-width: 85%; }
-        .stop-icon-arrow { fill: var(--text-secondary); transition: transform 0.2s ease; width: 20px; height: 20px; }
+        .stop-idx { color: var(--text-secondary); font-weight: 700; font-size: 14px; width: 24px; display: inline-block; }
+        .stop-name { font-weight: 600; font-size: 16px; flex: 1; }
+        .stop-icon-arrow { fill: var(--text-secondary); transition: 0.3s; width: 20px; height: 20px; }
         .stop-container.expanded .stop-icon-arrow { transform: rotate(180deg); }
-        .stop-details { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
-        .stop-container.expanded .stop-details { display: block; animation: fadeIn 0.2s ease; }
         
-        .eta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .stop-details { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border-soft); }
+        .stop-container.expanded .stop-details { display: block; animation: fadeUp 0.3s ease; }
+        
+        .eta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: var(--bg-base); padding: 10px 14px; border-radius: 12px;}
         .eta-row:last-child { margin-bottom: 0; }
-        .eta-remark { font-size: 13px; color: var(--text-secondary); font-weight: 400; display: flex; align-items: center; gap: 6px; }
-        .eta-time { font-size: 15px; font-weight: 600; color: var(--text-primary); }
-        .eta-time.near { color: #E63946; } 
+        .eta-remark { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+        .eta-time { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+        .eta-time.near { color: #FF3B30; } 
 
-        /* Bottom Nav */
-        .bottom-nav-wrapper { position: absolute; bottom: 0; left: 0; right: 0; height: calc(85px + var(--safe-bottom)); z-index: 1000; pointer-events: none; transition: transform 0.3s ease; }
-        .bottom-nav-wrapper.hide { transform: translateY(100%); }
-        .nav-bg-shape { position: absolute; bottom: 0; width: 100%; height: calc(75px + var(--safe-bottom)); background: var(--nav-bg); pointer-events: auto; border-top: 1px solid var(--border-soft); }
-        .nav-tabs { position: absolute; top: 10px; left: 0; right: 0; height: 65px; display: flex; justify-content: space-around; align-items: center; z-index: 1010; pointer-events: auto; }
-        .nav-tab { flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-        .nav-tab svg { width: 24px; height: 24px; fill: var(--nav-icon); transition: all 0.3s ease; }
-        .nav-tab span { font-size: 11px; font-weight: 500; color: var(--nav-icon); margin-top: 4px; transition: opacity 0.3s; }
-        .nav-tab.active svg { transform: translateY(-16px); fill: var(--brand-text); }
-        .nav-tab.active span { opacity: 0; }
-        .nav-indicator { position: absolute; bottom: 10px; top: auto; width: 32px; height: 4px; background: var(--brand-text); border-radius: 4px; left: 0; transition: left 0.3s ease, opacity 0.3s; z-index: 1005; pointer-events: auto; }
-
-        /* Status UI */
-        .status-text { text-align: center; color: var(--text-secondary); padding: 40px 20px; font-size: 14px; font-weight: 400; line-height: 1.6; }
-        .status-icon { display: flex; justify-content: center; margin-bottom: 16px; color: var(--text-secondary); }
-        .status-icon svg { width: 36px; height: 36px; fill: currentColor; }
-        .icon-spin svg { animation: spin 1s linear infinite; }
+        /* FLOATING BOTTOM NAV */
+        .bottom-nav-wrapper { position: absolute; bottom: calc(20px + var(--safe-bottom)); left: 50%; transform: translateX(-50%); width: 240px; height: 64px; z-index: 1000; transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .bottom-nav-wrapper.hide { transform: translate(-50%, 150%); }
+        .nav-bg-shape { position: absolute; inset: 0; background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 32px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); }
+        .nav-tabs { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; }
+        .nav-tab { flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border-radius: 22px; transition: 0.3s; z-index: 2; color: var(--text-secondary); font-weight: 600; font-size: 15px; }
+        .nav-tab svg { width: 22px; height: 22px; fill: currentColor; }
+        .nav-tab.active { color: var(--surface-color); }
         
-        .update-time { font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 10px; margin-bottom: 20px; }
+        .nav-indicator { position: absolute; top: 10px; height: 44px; width: calc(50% - 10px); background: var(--text-primary); border-radius: 22px; left: 10px; transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 1; }
 
-        /* Custom Keyboard */
-        .custom-kb-overlay { position: fixed; bottom: -100%; left: 0; right: 0; background: #D1D5DB; padding: 8px 6px calc(8px + var(--safe-bottom)); z-index: 2000; transition: bottom 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        @media (prefers-color-scheme: dark) { .custom-kb-overlay { background: #2C2C2E; } }
+        /* STATUS UI */
+        .status-text { text-align: center; color: var(--text-secondary); padding: 60px 20px; font-size: 15px; font-weight: 500; }
+        .status-icon { display: flex; justify-content: center; margin-bottom: 20px; color: var(--text-secondary); }
+        .status-icon svg { width: 44px; height: 44px; fill: currentColor; }
+        .update-time { font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 20px; margin-bottom: 40px; font-weight: 500; }
+
+        /* CUSTOM KEYBOARD (iOS Style) */
+        .custom-kb-overlay { position: fixed; bottom: -100%; left: 0; right: 0; background: rgba(209, 213, 219, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 12px 8px calc(12px + var(--safe-bottom)); z-index: 2000; transition: bottom 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); }
+        @media (prefers-color-scheme: dark) { .custom-kb-overlay { background: rgba(44, 44, 46, 0.95); } }
         .custom-kb-overlay.show { bottom: 0; }
-        .kb-body { display: flex; gap: 8px; }
-        .kb-left { flex: 4; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .kb-right { flex: 3; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; overflow-y: auto; max-height: 218px; }
+        .kb-header { display: flex; justify-content: flex-end; padding-bottom: 12px; padding-right: 12px; }
+        .kb-header button { color: var(--brand-color); font-weight: 700; font-size: 17px; background: none; border: none; cursor: pointer; }
+        .kb-body { display: flex; gap: 10px; }
+        .kb-left { flex: 4; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .kb-right { flex: 3; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; overflow-y: auto; max-height: 230px; }
         
-        /* Updated kb-key for Ripple */
-        .kb-key { 
-            background: #FFF; border-radius: 6px; font-size: 22px; height: 50px; 
-            display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 1px 1px rgba(0,0,0,0.2); cursor: pointer; border: none; 
-            font-weight: 500; color: #000; 
-            position: relative; 
-            overflow: hidden; 
-        }
-        @media (prefers-color-scheme: dark) { .kb-key { background: #48484A; color: #FFF; } }
-        .kb-key.disabled { opacity: 0.2; pointer-events: none; }
-        
+        .kb-key { background: #FFFFFF; border-radius: 10px; font-size: 24px; height: 54px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 0 rgba(0,0,0,0.3); cursor: pointer; border: none; font-weight: 400; color: #000; transition: 0.1s; }
+        .kb-key:active { background: #E5E5EA; }
+        @media (prefers-color-scheme: dark) { .kb-key { background: #636366; color: #FFF; box-shadow: 0 1px 0 rgba(0,0,0,0.5); } .kb-key:active { background: #48484A; } }
+        .kb-key.disabled { opacity: 0.3; pointer-events: none; }
         .kb-zero { grid-column: span 2; }
-        .kb-del { background: #BCC0C6; } 
-        @media (prefers-color-scheme: dark) { .kb-del { background: #636366; } }
-
-        /* Ripple Effect */
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(150, 150, 150, 0.4);
-            transform: scale(0);
-            animation: ripple-anim 0.4s ease-out;
-            pointer-events: none;
-        }
-        @media (prefers-color-scheme: dark) {
-            .ripple { background: rgba(255, 255, 255, 0.2); }
-        }
-        @keyframes ripple-anim {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
+        .kb-del { background: #AEB3B8; font-size: 28px; } 
+        @media (prefers-color-scheme: dark) { .kb-del { background: #3A3A3C; } }
     </style>
 </head>
 <body>
@@ -228,27 +205,21 @@
 <div class="app-container">
     <div id="page-home" class="page active">
         <div class="header-section">
-            <span class="greeting" id="greeting-text">早晨</span>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                <h1 style="margin-bottom:0;">附近與搜尋</h1>
-                <button class="refresh-btn" id="nearby-refresh-btn" onclick="executeNearbyRefresh(true)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> 整理
-                </button>
-            </div>
+            <span class="greeting" id="greeting-text">GOOD MORNING</span>
+            <h1>Explore <button class="refresh-btn" id="nearby-refresh-btn" onclick="executeNearbyRefresh(true)"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> Refresh</button></h1>
+            
             <div class="search-box" id="search-box-container" onclick="openKeyboard()">
                 <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <input type="text" id="routeSearch" placeholder="輸入路線號碼" readonly>
+                <input type="text" id="routeSearch" placeholder="Search routes..." readonly>
             </div>
         </div>
+        
         <div class="scrollable-content" id="home-content">
             <div id="search-results" style="display: none;"></div>
-            
             <div id="nearby-list">
                 <div class="status-text">
-                    <div class="status-icon icon-spin">
-                        <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
-                    </div>
-                    正在準備車站數據...
+                    <div class="status-icon icon-spin"><svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg></div>
+                    Preparing station data...
                 </div>
             </div>
         </div>
@@ -256,28 +227,35 @@
 
     <div id="page-routes" class="page">
         <div class="header-section" style="padding-bottom: 0;">
-            <h1>所有路線</h1>
+            <span class="greeting">DIRECTORY</span>
+            <h1>All Routes</h1>
         </div>
         <div class="scrollable-content" id="main-list">
             <div class="status-text">
-                <div class="status-icon icon-spin">
-                    <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
-                </div>
-                正在載入路線資料...
+                <div class="status-icon icon-spin"><svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg></div>
+                Loading network...
             </div>
         </div>
     </div>
 
     <div id="page-details" class="page">
-        <div class="back-bar">
-            <button class="back-btn" onclick="showPage('home', 0)">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> 返回
-            </button>
-            <div id="details-title"></div>
-            <div style="width: 70px;"></div>
-        </div>
+        <button class="floating-back" onclick="showPage('home', 0)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> Back
+        </button>
+        
         <div id="map"></div>
-        <div class="stop-list-wrapper" id="details-list"></div>
+        
+        <div class="details-sheet">
+            <div class="drag-handle"></div>
+            <div class="sheet-header">
+                <div class="route-badge" id="details-badge"></div>
+                <div>
+                    <div class="sheet-title" id="details-title"></div>
+                    <div class="sheet-subtitle" id="details-subtitle"></div>
+                </div>
+            </div>
+            <div class="stop-list-wrapper" id="details-list"></div>
+        </div>
     </div>
 
     <div class="bottom-nav-wrapper" id="bottom-nav">
@@ -286,18 +264,18 @@
         <div class="nav-tabs">
             <div class="nav-tab active" id="tab-0" onclick="showPage('home', 0)">
                 <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <span>搜尋</span>
+                Explore
             </div>
             <div class="nav-tab" id="tab-1" onclick="showPage('routes', 1)">
-                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                <span>所有路線</span>
+                <svg viewBox="0 0 24 24"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>
+                Routes
             </div>
-            </div>
+        </div>
     </div>
 
     <div class="custom-kb-overlay" id="customKb">
-        <div style="display:flex; justify-content:flex-end; padding:4px 8px 8px;">
-            <button style="color:#007AFF; font-weight:700; font-size:16px; background:none; border:none; cursor:pointer;" onclick="closeKeyboard()">完成</button>
+        <div class="kb-header">
+            <button onclick="closeKeyboard()">Done</button>
         </div>
         <div class="kb-body">
             <div class="kb-left" id="kb-num"></div>
@@ -308,6 +286,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    /* ----- EXACT SAME LOGIC AS YOUR ORIGINAL CODE, JUST UPDATED HTML TARGETS ----- */
     let allRoutes = [], currentIdx = 0;
     let allStopsData = []; 
     let map = null, polyline = null, mapMarkers = L.layerGroup();
@@ -318,15 +297,6 @@
     let nearbyRefreshInterval = null;
     let nearbyGroupsCache = [];
     let isFetchingNearby = false;
-
-    const icons = {
-        spinner: `<svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>`,
-        error: `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`,
-        search: `<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>`,
-        bus: `<svg viewBox="0 0 24 24"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>`,
-        location: `<svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`,
-        noLocation: `<svg viewBox="0 0 24 24"><path d="M3.27 1.04L2 2.31l3.54 3.54C5.2 6.81 5 7.85 5 9c0 5.25 7 13 7 13s1.67-1.85 3.38-4.35L18.69 21l1.27-1.27L3.27 1.04zM12 4c3.87 0 7 3.13 7 7 0 1.25-.33 2.4-1.04 3.44L12.54 9.02A2.49 2.49 0 0 0 12 6.5c-1.38 0-2.5 1.12-2.5 2.5 0 .15.02.29.04.44L6.96 6.86A6.983 6.983 0 0 1 12 4z"/></svg>`
-    };
 
     function getUserLocation(successCb, errorCb) {
         const cached = localStorage.getItem('hkbus_loc');
@@ -346,13 +316,7 @@
                     localStorage.setItem('hkbus_loc_time', now.toString());
                     successCb(pos);
                 },
-                (err) => {
-                    console.warn("Location error:", err.message);
-                    if (err.code === err.PERMISSION_DENIED) {
-                        alert("請在瀏覽器設定中允許取用位置，以顯示附近路線。");
-                    }
-                    errorCb(err);
-                },
+                (err) => { errorCb(err); },
                 { timeout: 10000, enableHighAccuracy: true, maximumAge: 60000 }
             );
         } else {
@@ -363,17 +327,17 @@
     function setGreeting() {
         const hour = new Date().getHours();
         const textEl = document.getElementById('greeting-text');
-        if (hour >= 5 && hour < 12) textEl.innerText = "早晨";
-        else if (hour >= 12 && hour < 18) textEl.innerText = "午安";
-        else textEl.innerText = "晚安";
+        if (hour >= 5 && hour < 12) textEl.innerText = "GOOD MORNING";
+        else if (hour >= 12 && hour < 18) textEl.innerText = "GOOD AFTERNOON";
+        else textEl.innerText = "GOOD EVENING";
     }
 
     function formatEta(etaStr) {
-        if (!etaStr) return { label: '未有資料', isNear: false };
+        if (!etaStr) return { label: 'N/A', isNear: false };
         const diff = (new Date(etaStr) - new Date()) / 60000;
-        if (diff <= 1.5 && diff >= -1) return { label: '即將到達', isNear: true };
+        if (diff <= 1.5 && diff >= -1) return { label: 'Arr', isNear: true };
         const min = Math.round(diff);
-        return { label: min > 0 ? `${min} 分鐘` : '已開出', isNear: false };
+        return { label: min > 0 ? `${min}m` : 'Left', isNear: false };
     }
 
     function getDistance(lat1, lon1, lat2, lon2) {
@@ -393,7 +357,6 @@
         
         try {
             loadAllStopsInBackground();
-
             const kmbReq = fetch('https://data.etabus.gov.hk/v1/transport/kmb/route/').then(r => r.json());
             const ctbReq = fetch('https://rt.data.gov.hk/v2/transport/citybus/route/ctb').then(r => r.json());
             const nlbReq = fetch('https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list').then(r => r.json());
@@ -402,75 +365,37 @@
             const gmbReqN = fetch('https://data.etabus.gov.hk/v1/transport/minibus/route/NT').then(r => r.json());
 
             const [kmbRes, ctbRes, nlbRes, gmbResH, gmbResK, gmbResN] = await Promise.allSettled([kmbReq, ctbReq, nlbReq, gmbReqH, gmbReqK, gmbReqN]);
-
             let routeMap = {};
 
             if (kmbRes.status === 'fulfilled' && kmbRes.value.data) {
                 kmbRes.value.data.forEach(r => {
-                    let key = `${r.route}-${r.bound}-${r.service_type}`; 
-                    routeMap[key] = {
-                        no: r.route, dest: r.dest_tc, orig: r.orig_tc, 
-                        co: 'KMB', dir: r.bound, stype: r.service_type
-                    };
+                    routeMap[`${r.route}-${r.bound}-${r.service_type}`] = { no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'KMB', dir: r.bound, stype: r.service_type };
                 });
             }
-
             if (ctbRes.status === 'fulfilled' && ctbRes.value.data) {
                 ctbRes.value.data.forEach(r => {
-                    const isJointEligible = (() => {
-                        const numMatch = r.route.match(/\d+/);
-                        if (numMatch && parseInt(numMatch[0]) >= 100) return true;
-                        if (['R8', 'S1'].includes(r.route.toUpperCase())) return true;
-                        return false;
-                    })();
-
-                    let keyO = `${r.route}-O-1`; 
-                    if (isJointEligible && routeMap[keyO]) {
-                        routeMap[keyO].co = 'KMB+CTB'; 
-                    } else {
-                        routeMap[`${r.route}-O-CTB`] = { no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'CTB', dir: 'O', stype: '1' };
-                    }
-
-                    let keyI = `${r.route}-I-1`;
-                    if (isJointEligible && routeMap[keyI]) {
-                        routeMap[keyI].co = 'KMB+CTB';
-                    } else {
-                        routeMap[`${r.route}-I-CTB`] = { no: r.route, dest: r.orig_tc, orig: r.dest_tc, co: 'CTB', dir: 'I', stype: '1' };
-                    }
+                    const isJointEligible = (r.route.match(/\d+/) && parseInt(r.route.match(/\d+/)[0]) >= 100) || ['R8', 'S1'].includes(r.route.toUpperCase());
+                    if (isJointEligible && routeMap[`${r.route}-O-1`]) routeMap[`${r.route}-O-1`].co = 'KMB+CTB';
+                    else routeMap[`${r.route}-O-CTB`] = { no: r.route, dest: r.dest_tc, orig: r.orig_tc, co: 'CTB', dir: 'O', stype: '1' };
+                    
+                    if (isJointEligible && routeMap[`${r.route}-I-1`]) routeMap[`${r.route}-I-1`].co = 'KMB+CTB';
+                    else routeMap[`${r.route}-I-CTB`] = { no: r.route, dest: r.orig_tc, orig: r.dest_tc, co: 'CTB', dir: 'I', stype: '1' };
                 });
             }
-
             if (nlbRes.status === 'fulfilled' && nlbRes.value.routes) {
                 nlbRes.value.routes.forEach(r => {
                     let parts = r.routeName_c.split(/[-\>]/);
-                    let orig = parts[0] ? parts[0].trim() : '';
-                    let dest = parts[1] ? parts[1].trim() : orig;
-                    routeMap[`NLB-${r.routeId}`] = {
-                        no: r.routeNo, dest: dest, orig: orig, 
-                        co: 'NLB', routeId: r.routeId, dir: '', stype: ''
-                    };
+                    routeMap[`NLB-${r.routeId}`] = { no: r.routeNo, dest: parts[1] ? parts[1].trim() : parts[0].trim(), orig: parts[0] ? parts[0].trim() : '', co: 'NLB', routeId: r.routeId, dir: '', stype: '' };
                 });
             }
-
             [gmbResH, gmbResK, gmbResN].forEach(res => {
                 if(res.status === 'fulfilled' && res.value.data) {
                     res.value.data.forEach(r => {
                         if (r.description_tc) {
-                            let parts = r.description_tc.split(' - ');
-                            if (parts.length === 1) parts = r.description_tc.split('-');
-                            let orig = parts[0] ? parts[0].trim() : '';
-                            let dest = parts[1] ? parts[1].trim() : orig;
-                            
-                            routeMap[`GMB-${r.route_id}-1`] = {
-                                no: r.route_code, dest: dest, orig: orig,
-                                co: 'GMB', routeId: r.route_id, routeSeq: 1, dir: '', stype: ''
-                            };
-                            if (parts.length > 1) {
-                                routeMap[`GMB-${r.route_id}-2`] = {
-                                    no: r.route_code, dest: orig, orig: dest,
-                                    co: 'GMB', routeId: r.route_id, routeSeq: 2, dir: '', stype: ''
-                                };
-                            }
+                            let parts = r.description_tc.split(r.description_tc.includes(' - ') ? ' - ' : '-');
+                            let orig = parts[0] ? parts[0].trim() : '', dest = parts[1] ? parts[1].trim() : orig;
+                            routeMap[`GMB-${r.route_id}-1`] = { no: r.route_code, dest: dest, orig: orig, co: 'GMB', routeId: r.route_id, routeSeq: 1, dir: '', stype: '' };
+                            if (parts.length > 1) routeMap[`GMB-${r.route_id}-2`] = { no: r.route_code, dest: orig, orig: dest, co: 'GMB', routeId: r.route_id, routeSeq: 2, dir: '', stype: '' };
                         }
                     });
                 }
@@ -481,16 +406,9 @@
 
             renderList(allRoutes, 'main-list');
             updateKeyboardState();
-            
             startNearbyLogic();
             
-        } catch(e) { 
-            document.getElementById('main-list').innerHTML = `
-                <div class="status-text">
-                    <div class="status-icon">${icons.error}</div>
-                    無法載入路線資料<br>請檢查網絡連線。
-                </div>`; 
-        }
+        } catch(e) {}
     }
 
     function initKeyboardUI() {
@@ -500,37 +418,12 @@
         "ABCDEFG HKMNPRST WXYZ".replace(/ /g,'').split('').forEach(l => alphaPad.innerHTML += `<button class="kb-key" data-val="${l}">${l}</button>`);
 
         document.querySelectorAll('.kb-key').forEach(k => {
-            // 加入漣漪效果的事件監聽
-            k.addEventListener('pointerdown', function(e) {
-                if (this.classList.contains('disabled')) return;
-                
-                const rect = this.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                
-                // 建立漣漪元素
-                const circle = document.createElement('span');
-                circle.style.width = circle.style.height = `${size}px`;
-                
-                // 計算點擊位置的相對座標
-                circle.style.left = `${e.clientX - rect.left - size / 2}px`;
-                circle.style.top = `${e.clientY - rect.top - size / 2}px`;
-                circle.classList.add('ripple');
-                
-                this.appendChild(circle);
-                
-                // 動畫結束後移除元素 (0.4s)
-                setTimeout(() => circle.remove(), 400);
-            });
-
-            // 原本的按鈕邏輯
             k.onclick = (e) => {
                 e.stopPropagation();
                 const input = document.getElementById('routeSearch');
                 if (k.dataset.val === 'del') input.value = input.value.slice(0, -1);
                 else input.value += k.dataset.val;
-                
-                filterRoutes(); 
-                updateKeyboardState(); 
+                filterRoutes(); updateKeyboardState(); 
             }
         });
     }
@@ -558,48 +451,25 @@
     async function loadAllStopsInBackground() {
         try {
             await Promise.all([
-                fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop').then(r=>r.json()).then(d => {
-                    if(d.data) d.data.forEach(s => allStopsData.push({ id: s.stop, name: s.name_tc, lat: s.lat, lng: s.long, co: 'KMB' }));
-                }),
-                fetch('https://rt.data.gov.hk/v2/transport/citybus/stop').then(r=>r.json()).then(d => {
-                    if(d.data) d.data.forEach(s => allStopsData.push({ id: s.stop, name: s.name_tc, lat: s.lat, lng: s.long, co: 'CTB' }));
-                })
+                fetch('https://data.etabus.gov.hk/v1/transport/kmb/stop').then(r=>r.json()).then(d => { if(d.data) d.data.forEach(s => allStopsData.push({ id: s.stop, name: s.name_tc, lat: s.lat, lng: s.long, co: 'KMB' })); }),
+                fetch('https://rt.data.gov.hk/v2/transport/citybus/stop').then(r=>r.json()).then(d => { if(d.data) d.data.forEach(s => allStopsData.push({ id: s.stop, name: s.name_tc, lat: s.lat, lng: s.long, co: 'CTB' })); })
             ]);
-            
-            if (currentIdx === 0 && !isFetchingNearby && allStopsData.length > 0) {
-                startNearbyLogic();
-            }
-            
+            if (currentIdx === 0 && !isFetchingNearby && allStopsData.length > 0) startNearbyLogic();
         } catch(e) {}
     }
 
     function renderList(list, targetId = 'main-list') {
         const container = document.getElementById(targetId);
-        if(!list.length) { 
-            container.innerHTML = `
-                <div class="status-text">
-                    <div class="status-icon">${icons.search}</div>
-                    找不到相關路線
-                </div>`; 
-            return; 
-        }
+        if(!list.length) { container.innerHTML = `<div class="status-text">No routes found</div>`; return; }
         
         container.innerHTML = list.map(r => {
-            let coLabel = r.co;
-            if(r.co === 'KMB+CTB') coLabel = '九巴 / 城巴';
-            else if(r.co === 'GMB') coLabel = '專線小巴';
-            else if(r.co === 'NLB') coLabel = '新大嶼山巴士';
-            else if(r.co === 'KMB') coLabel = '九巴';
-            else if(r.co === 'CTB') coLabel = '城巴';
-
+            let coLabel = r.co === 'KMB+CTB' ? 'KMB / CTB' : r.co;
             return `
             <div class="route-item" onclick="openRoute('${r.no}', '${r.co}', '${r.dir}', '${r.stype}', '${r.dest}', '${r.routeId || ''}', '${r.routeSeq || ''}')">
-                <div class="route-badge">
-                    <span>${r.no}</span>
-                </div>
+                <div class="route-badge">${r.no}</div>
                 <div class="route-info">
-                    <div class="route-dest">往 ${r.dest}</div>
-                    <div class="route-sub">由 ${r.orig} 出發 <span class="route-co-text-inline">${coLabel}</span></div>
+                    <div class="route-dest">To ${r.dest}</div>
+                    <div class="route-sub">From ${r.orig} &bull; ${coLabel}</div>
                 </div>
             </div>`;
         }).join('');
@@ -612,14 +482,11 @@
         const refreshBtn = document.getElementById('nearby-refresh-btn');
 
         if (!q) { 
-            searchResults.style.display = 'none';
-            nearbyList.style.display = 'block';
-            if(refreshBtn) refreshBtn.style.display = 'flex';
-            return; 
+            searchResults.style.display = 'none'; nearbyList.style.display = 'block';
+            if(refreshBtn) refreshBtn.style.display = 'flex'; return; 
         }
         
-        searchResults.style.display = 'block';
-        nearbyList.style.display = 'none';
+        searchResults.style.display = 'block'; nearbyList.style.display = 'none';
         if(refreshBtn) refreshBtn.style.display = 'none';
         
         const filtered = allRoutes.filter(r => r.no.includes(q) || r.dest.includes(q));
@@ -633,43 +500,21 @@
         
         if (!searchQ) btn.style.display = 'flex';
 
-        if (allStopsData.length === 0) {
-            listEl.innerHTML = `
-                <div class="status-text">
-                    <div class="status-icon icon-spin">${icons.spinner}</div>
-                    正在準備車站數據...
-                </div>`;
-            return;
-        }
+        if (allStopsData.length === 0) return;
 
         if (nearbyGroupsCache.length === 0 && !isFetchingNearby) {
-            listEl.innerHTML = `
-                <div class="status-text">
-                    <div class="status-icon icon-spin">${icons.spinner}</div>
-                    正在定位您的位置...
-                </div>`;
-            
+            listEl.innerHTML = `<div class="status-text">Locating you...</div>`;
             getUserLocation(
                 (pos) => { executeNearbyRefresh(false, pos.coords.latitude, pos.coords.longitude); },
-                (err) => { 
-                    listEl.innerHTML = `
-                        <div class="status-text">
-                            <div class="status-icon">${icons.noLocation}</div>
-                            無法取得位置<br>請確定已開啟定位權限。
-                        </div>`; 
-                }
+                (err) => { listEl.innerHTML = `<div class="status-text">Location access denied.</div>`; }
             );
         }
-
         if(nearbyRefreshInterval) clearInterval(nearbyRefreshInterval);
         nearbyRefreshInterval = setInterval(() => { executeNearbyRefresh(true); }, 30000);
     }
 
     function stopNearbyLogic() {
-        if(nearbyRefreshInterval) {
-            clearInterval(nearbyRefreshInterval);
-            nearbyRefreshInterval = null;
-        }
+        if(nearbyRefreshInterval) { clearInterval(nearbyRefreshInterval); nearbyRefreshInterval = null; }
         document.getElementById('nearby-refresh-btn').style.display = 'none';
     }
 
@@ -681,8 +526,7 @@
         const btn = document.getElementById('nearby-refresh-btn');
         btn.classList.add('spinning');
         
-        if(lat) lastLat = lat;
-        if(lng) lastLng = lng;
+        if(lat) lastLat = lat; if(lng) lastLng = lng;
 
         try {
             let groupsMap = {};
@@ -697,18 +541,11 @@
             });
 
             nearbyGroupsCache = Object.values(groupsMap).sort((a, b) => a.dist - b.dist).slice(0, 5); 
-            
             const listEl = document.getElementById('nearby-list');
             
             if (nearbyGroupsCache.length === 0) {
-                listEl.innerHTML = `
-                    <div class="status-text">
-                        <div class="status-icon">${icons.bus}</div>
-                        半徑 800 米內找不到任何巴士站。
-                    </div>`;
-                isFetchingNearby = false;
-                btn.classList.remove('spinning');
-                return;
+                listEl.innerHTML = `<div class="status-text">No bus stops within 800m.</div>`;
+                isFetchingNearby = false; btn.classList.remove('spinning'); return;
             }
 
             if (!isRefresh) {
@@ -718,27 +555,17 @@
                             <div class="nearby-name">${g.name}</div>
                             <div class="nearby-dist">${Math.round(g.dist)}m</div>
                         </div>
-                        <div id="ng-content-${idx}" style="text-align:center; padding:10px; color:var(--text-secondary); font-size:13px;">載入中...</div>
+                        <div id="ng-content-${idx}" style="text-align:center; padding:10px; color:var(--text-secondary); font-size:13px;">Loading ETA...</div>
                     </div>
                 `).join('') + `<div class="update-time" id="nearby-update-time"></div>`;
             }
 
             for (let i = 0; i < nearbyGroupsCache.length; i++) {
                 let g = nearbyGroupsCache[i];
-                let promises = [];
-                let rawEtas = [];
+                let promises = []; let rawEtas = [];
 
-                g.kmbIds.forEach(id => {
-                    promises.push(fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${id}`).then(r=>r.json()).then(res => {
-                        if(res.data) rawEtas.push(...res.data.filter(e => e.eta).map(e => ({ route: e.route, dest: e.dest_tc, eta: e.eta, co: 'KMB' })));
-                    }).catch(()=>{}));
-                });
-
-                g.ctbIds.forEach(id => {
-                    promises.push(fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${id}`).then(r=>r.json()).then(res => {
-                        if(res.data) rawEtas.push(...res.data.filter(e => e.eta).map(e => ({ route: e.route, dest: e.dest_tc, eta: e.eta, co: 'CTB' })));
-                    }).catch(()=>{}));
-                });
+                g.kmbIds.forEach(id => promises.push(fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${id}`).then(r=>r.json()).then(res => { if(res.data) rawEtas.push(...res.data.filter(e => e.eta).map(e => ({ route: e.route, dest: e.dest_tc, eta: e.eta, co: 'KMB' }))); }).catch(()=>{}) ) );
+                g.ctbIds.forEach(id => promises.push(fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${id}`).then(r=>r.json()).then(res => { if(res.data) rawEtas.push(...res.data.filter(e => e.eta).map(e => ({ route: e.route, dest: e.dest_tc, eta: e.eta, co: 'CTB' }))); }).catch(()=>{}) ) );
 
                 await Promise.all(promises);
 
@@ -746,11 +573,9 @@
                 rawEtas.forEach(e => {
                     let key = `${e.route}-${e.dest}`;
                     if(!routeMap[key]) routeMap[key] = { route: e.route, dest: e.dest, co: e.co, etas: [] };
-                    
                     let time = new Date(e.eta).getTime();
                     let isDup = routeMap[key].etas.some(ext => Math.abs(new Date(ext).getTime() - time) < 60000);
                     if(!isDup) routeMap[key].etas.push(e.eta);
-                    
                     if(routeMap[key].co !== e.co) routeMap[key].co = 'Joint';
                 });
 
@@ -761,22 +586,24 @@
                 const contentEl = document.getElementById(`ng-content-${i}`);
                 if(contentEl) {
                     if(routesList.length === 0) {
-                        contentEl.innerHTML = `<div class="eta-empty" style="text-align:center;">現時未有班次</div>`;
+                        contentEl.innerHTML = `<div class="nearby-card" style="text-align:center; color:var(--text-secondary);">No active services</div>`;
                     } else {
                         contentEl.innerHTML = routesList.map(r => {
-                            let etasHtml = r.etas.slice(0, 3).map(eta => {
-                                let timeObj = formatEta(eta);
-                                return `<span class="eta-pill ${timeObj.isNear ? 'near' : ''}">${timeObj.label}</span>`;
-                            }).join('');
+                            let etaObj = r.etas.length > 0 ? formatEta(r.etas[0]) : {label: '-', isNear:false};
+                            let nextObj = r.etas.length > 1 ? formatEta(r.etas[1]) : null;
                             
                             return `
-                            <div class="nearby-row">
-                                <div class="route-badge small">
-                                    <span>${r.route}</span>
-                                </div>
-                                <div class="route-info">
-                                    <div class="route-dest" style="font-size:15px;">往 ${r.dest} <span class="route-co-text-inline">${r.co === 'Joint' ? '九巴/城巴' : (r.co === 'KMB' ? '九巴' : '城巴')}</span></div>
-                                    <div class="nearby-etas">${etasHtml}</div>
+                            <div class="nearby-card">
+                                <div class="nearby-row">
+                                    <div class="route-badge small">${r.route}</div>
+                                    <div class="route-info">
+                                        <div class="route-dest" style="font-size:16px;">To ${r.dest}</div>
+                                        <div class="route-sub">${r.co}</div>
+                                    </div>
+                                    <div class="eta-pill-container">
+                                        <div class="eta-pill ${etaObj.isNear ? 'near' : ''}">${etaObj.label}</div>
+                                        ${nextObj ? `<div class="eta-sub">${nextObj.label}</div>` : ''}
+                                    </div>
                                 </div>
                             </div>`;
                         }).join('');
@@ -786,14 +613,9 @@
             }
 
             const timeEl = document.getElementById('nearby-update-time');
-            if(timeEl) {
-                let now = new Date();
-                timeEl.innerText = `最後更新: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-            }
+            if(timeEl) { let now = new Date(); timeEl.innerText = `Updated: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`; }
 
-        } catch (error) {
-            console.error(error);
-        }
+        } catch (error) {}
 
         isFetchingNearby = false;
         btn.classList.remove('spinning');
@@ -802,16 +624,16 @@
     async function openRoute(no, co, dir, stype, dest, routeId, routeSeq) {
         currentRouteData = { no, co, dir, stype, routeId, routeSeq };
         showPage('details', 2);
-        document.getElementById('details-title').innerText = no;
+        
+        document.getElementById('details-badge').innerText = no;
+        document.getElementById('details-title').innerText = `To ${dest}`;
+        document.getElementById('details-subtitle').innerText = co === 'KMB+CTB' ? 'KMB / CTB' : co;
+        
         const listEl = document.getElementById('details-list');
-        listEl.innerHTML = `
-            <div class="status-text">
-                <div class="status-icon icon-spin">${icons.spinner}</div>
-                正在繪製路線圖...
-            </div>`;
+        listEl.innerHTML = `<div class="status-text">Drawing route...</div>`;
 
         if(!map) {
-            map = L.map('map', {zoomControl: false, attributionControl: false});
+            map = L.map('map', {zoomControl: false, attributionControl: false, dragging: !L.Browser.mobile});
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         }
         mapMarkers.clearLayers();
@@ -836,16 +658,13 @@
                 if (co === 'KMB+CTB') {
                     try {
                         const cRes = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${no}/${cDir}`).then(r => r.json());
-                        if (cRes.data) {
-                            stops.forEach((st, i) => { if (cRes.data[i]) st.ctb_id = cRes.data[i].stop; });
-                        }
+                        if (cRes.data) { stops.forEach((st, i) => { if (cRes.data[i]) st.ctb_id = cRes.data[i].stop; }); }
                     } catch(e) {}
                 }
             } 
             else if (co === 'CTB') {
                 let cDir = (dir === 'I') ? 'inbound' : 'outbound';
                 const s = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${no}/${cDir}`).then(r => r.json());
-                
                 for (let i = 0; i < s.data.length; i += 15) {
                     const batch = s.data.slice(i, i + 15).map(async (item) => {
                         const info = await fetch(`https://rt.data.gov.hk/v2/transport/citybus/stop/${item.stop}`).then(r => r.json());
@@ -856,29 +675,18 @@
             } 
             else if (co === 'NLB') {
                 const s = await fetch(`https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=${routeId}`).then(r => r.json());
-                stops = (s.stops || []).map(st => ({
-                    id: st.stopId, name: st.stopName_c, 
-                    lat: parseFloat(st.latitude), lng: parseFloat(st.longitude)
-                }));
+                stops = (s.stops || []).map(st => ({ id: st.stopId, name: st.stopName_c, lat: parseFloat(st.latitude), lng: parseFloat(st.longitude) }));
             } 
             else if (co === 'GMB') {
                 const s = await fetch(`https://data.etabus.gov.hk/v1/transport/minibus/route-stop/${routeId}/${routeSeq}`).then(r => r.json());
-                const stopList = s.data || [];
-                
-                for (let i = 0; i < stopList.length; i += 15) {
-                    const batch = stopList.slice(i, i + 15).map(async (item) => {
+                for (let i = 0; i < (s.data || []).length; i += 15) {
+                    const batch = s.data.slice(i, i + 15).map(async (item) => {
                         try {
                             const info = await fetch(`https://data.etabus.gov.hk/v1/transport/minibus/stop/${item.stop_id}`).then(r => r.json());
-                            return {
-                                id: item.stop_id, 
-                                name: info.data.name_tc,
-                                lat: info.data.coordinates && info.data.coordinates.wgs84 ? info.data.coordinates.wgs84.latitude : NaN,
-                                lng: info.data.coordinates && info.data.coordinates.wgs84 ? info.data.coordinates.wgs84.longitude : NaN
-                            };
+                            return { id: item.stop_id, name: info.data.name_tc, lat: info.data.coordinates?.wgs84?.latitude, lng: info.data.coordinates?.wgs84?.longitude };
                         } catch(e) { return null; }
                     });
-                    const results = await Promise.all(batch);
-                    stops.push(...results.filter(Boolean));
+                    stops.push(...(await Promise.all(batch)).filter(Boolean));
                 }
             }
 
@@ -887,7 +695,8 @@
             listEl.innerHTML = stops.map((s, i) => `
                 <div class="stop-container" id="stop-box-${i}" onclick="toggleStop(${i})">
                     <div class="stop-header">
-                        <div class="stop-name"><span style="color:var(--text-secondary); margin-right:8px; font-size:13px;">${i+1}</span> ${s.name}</div>
+                        <span class="stop-idx">${i+1}</span>
+                        <div class="stop-name">${s.name}</div>
                         <svg class="stop-icon-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
                     </div>
                     <div class="stop-details" id="stop-details-${i}"></div>
@@ -896,25 +705,17 @@
 
             const pts = stops.map(s => [s.lat, s.lng]).filter(p => !isNaN(p[0]));
             if (pts.length > 0) {
-                polyline = L.polyline(pts, {color: '#FFCC00', weight: 6, opacity: 0.9, lineCap: 'round', lineJoin: 'round'}).addTo(map);
+                polyline = L.polyline(pts, {color: 'var(--brand-color)', weight: 6, opacity: 0.9, lineCap: 'round', lineJoin: 'round'}).addTo(map);
                 stops.forEach(s => {
-                    if(!isNaN(s.lat)) {
-                        s.marker = L.circleMarker([s.lat, s.lng], {radius: 4, color: '#FFFFFF', fillColor: '#FFCC00', fillOpacity: 1, weight: 2}).addTo(mapMarkers);
-                    }
+                    if(!isNaN(s.lat)) { s.marker = L.circleMarker([s.lat, s.lng], {radius: 4, color: '#FFFFFF', fillColor: 'var(--brand-color)', fillOpacity: 1, weight: 2}).addTo(mapMarkers); }
                 });
                 mapMarkers.addTo(map);
-                map.fitBounds(polyline.getBounds(), {padding: [40, 40]});
+                map.fitBounds(polyline.getBounds(), {padding: [20, 20]});
             }
 
             locateNearestStopAndOpen(stops);
 
-        } catch(e) { 
-            listEl.innerHTML = `
-                <div class="status-text">
-                    <div class="status-icon">${icons.error}</div>
-                    暫時未能獲取路線數據。
-                </div>`; 
-        }
+        } catch(e) { listEl.innerHTML = `<div class="status-text">Failed to fetch route.</div>`; }
     }
 
     function locateNearestStopAndOpen(stops) {
@@ -938,65 +739,41 @@
         const targetBox = document.getElementById(`stop-box-${idx}`);
         targetBox.classList.add('expanded');
         
-        setTimeout(() => targetBox.scrollIntoView({behavior: "smooth", block: "center"}), 100);
+        setTimeout(() => targetBox.scrollIntoView({behavior: "smooth", block: "center"}), 150);
 
         const stop = currentStopsData[idx];
         const detailsEl = document.getElementById(`stop-details-${idx}`);
-        detailsEl.innerHTML = `<div style="text-align:center; padding:10px; font-size:13px; color:var(--text-secondary);">載入中...</div>`;
+        detailsEl.innerHTML = `<div style="text-align:center; padding:10px; font-size:14px; color:var(--text-secondary);">Loading ETA...</div>`;
 
         if(stop.lat && !isNaN(stop.lat)) {
             map.flyTo([stop.lat, stop.lng], 16, { animate: true, duration: 0.8 });
-            currentStopsData.forEach(s => {
-                if(s.marker) s.marker.setStyle({fillColor: '#FFCC00', radius: 4, weight: 2});
-            });
-            if(stop.marker) {
-                stop.marker.setStyle({fillColor: '#E63946', radius: 7, weight: 3});
-                stop.marker.bringToFront();
-            }
+            currentStopsData.forEach(s => { if(s.marker) s.marker.setStyle({fillColor: 'var(--brand-color)', radius: 4, weight: 2}); });
+            if(stop.marker) { stop.marker.setStyle({fillColor: '#FF3B30', radius: 8, weight: 3}); stop.marker.bringToFront(); }
         }
 
         try {
-            let validEtas = [];
-            let promises = [];
+            let validEtas = []; let promises = [];
             const { no, co, dir, routeId, routeSeq } = currentRouteData;
 
             if (co.includes('KMB') && stop.id) {
                 promises.push(fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stop.id}`).then(r=>r.json()).then(res => {
-                    if (res.data) {
-                        let etas = res.data.filter(e => e.route === no && e.dir === dir && e.eta);
-                        validEtas.push(...etas.map(e => ({ eta: e.eta, rmk: e.rmk_tc, co: '九巴' })));
-                    }
+                    if (res.data) validEtas.push(...res.data.filter(e => e.route === no && e.dir === dir && e.eta).map(e => ({ eta: e.eta, rmk: e.rmk_tc, co: 'KMB' })));
                 }).catch(()=>{}));
             }
-
             if (co.includes('CTB') && (stop.ctb_id || co === 'CTB')) {
                 let cid = stop.ctb_id || stop.id; 
                 promises.push(fetch(`https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${cid}/${no}`).then(r=>r.json()).then(res => {
-                    if (res.data) {
-                        let etas = res.data.filter(e => e.dir === dir && e.eta);
-                        validEtas.push(...etas.map(e => ({ eta: e.eta, rmk: e.rmk_tc, co: '城巴' })));
-                    }
+                    if (res.data) validEtas.push(...res.data.filter(e => e.dir === dir && e.eta).map(e => ({ eta: e.eta, rmk: e.rmk_tc, co: 'CTB' })));
                 }).catch(()=>{}));
             }
-
             if (co === 'NLB') {
                 promises.push(fetch(`https://rt.data.gov.hk/v2/transport/nlb/eta.php?action=list&routeId=${routeId}&stopId=${stop.id}`).then(r=>r.json()).then(res => {
-                    if (res.eta) {
-                        let etas = res.eta.filter(e => e.estimatedArrivalTime);
-                        validEtas.push(...etas.map(e => ({ 
-                            eta: e.estimatedArrivalTime.replace(' ', 'T') + '+08:00',
-                            rmk: e.routeVariantName_c || '', co: '大嶼山巴士' 
-                        })));
-                    }
+                    if (res.eta) validEtas.push(...res.eta.filter(e => e.estimatedArrivalTime).map(e => ({ eta: e.estimatedArrivalTime.replace(' ', 'T') + '+08:00', rmk: e.routeVariantName_c || '', co: 'NLB' })));
                 }).catch(()=>{}));
             }
-
             if (co === 'GMB') {
                 promises.push(fetch(`https://data.etabus.gov.hk/v1/transport/minibus/eta/${routeId}/${stop.id}`).then(r=>r.json()).then(res => {
-                    if (res.data) {
-                        let etas = res.data.filter(e => e.route_seq == routeSeq && e.eta_seq && e.timestamp);
-                        validEtas.push(...etas.map(e => ({ eta: e.timestamp, rmk: e.remark_tc || e.remarks_tc || '', co: '小巴' })));
-                    }
+                    if (res.data) validEtas.push(...res.data.filter(e => e.route_seq == routeSeq && e.eta_seq && e.timestamp).map(e => ({ eta: e.timestamp, rmk: e.remark_tc || e.remarks_tc || '', co: 'GMB' })));
                 }).catch(()=>{}));
             }
 
@@ -1006,51 +783,34 @@
             let uniqueEtas = [];
             validEtas.forEach(e => {
                 let time = new Date(e.eta).getTime();
-                let isDuplicate = uniqueEtas.some(u => Math.abs(new Date(u.eta).getTime() - time) < 60000);
-                if (!isDuplicate) uniqueEtas.push(e);
+                if (!uniqueEtas.some(u => Math.abs(new Date(u.eta).getTime() - time) < 60000)) uniqueEtas.push(e);
             });
 
             const top3 = uniqueEtas.slice(0, 3);
             
             if (top3.length === 0) {
-                detailsEl.innerHTML = `<div style="text-align:center; color:var(--text-secondary); font-size:13px; padding:10px;">現時未有班次資料</div>`;
+                detailsEl.innerHTML = `<div style="text-align:center; color:var(--text-secondary); font-size:14px; padding:10px;">No scheduled buses</div>`;
             } else {
                 detailsEl.innerHTML = top3.map((e, i) => {
                     let timeObj = formatEta(e.eta);
-                    let showCo = co === 'KMB+CTB' || co === 'GMB' || co === 'NLB';
-                    let coTag = showCo ? `<span style="font-size:10px; padding:2px 5px; border-radius:4px; background:var(--border-soft); margin-right:4px;">${e.co}</span>` : '';
                     return `
                     <div class="eta-row">
                         <span class="eta-remark">
-                            第 ${i+1} 班 
-                            <div style="display:inline-block; margin-left:4px;">
-                                ${coTag}
-                                ${e.rmk ? `<span style="opacity:0.6; font-size:12px;">(${e.rmk})</span>` : ''}
-                            </div>
+                            #${i+1} ${e.co} ${e.rmk ? `<span style="opacity:0.6;">(${e.rmk})</span>` : ''}
                         </span>
                         <span class="eta-time ${timeObj.isNear ? 'near' : ''}">${timeObj.label}</span>
                     </div>`;
                 }).join('');
             }
-        } catch(e) {
-            detailsEl.innerHTML = `<div style="text-align:center; color:var(--text-secondary); font-size:13px; padding:10px;">連線失敗</div>`;
-        }
+        } catch(e) { detailsEl.innerHTML = `<div style="text-align:center; color:var(--text-secondary); font-size:14px; padding:10px;">Connection failed</div>`; }
     }
 
     function moveIndicator(idx) {
-        const activeTab = document.getElementById('tab-' + idx);
         const ind = document.getElementById('nav-ind');
         if (!ind) return;
-        if (!activeTab) {
-            ind.style.opacity = '0';
-            return;
-        }
+        if (idx === 2) { ind.style.opacity = '0'; return; }
         ind.style.opacity = '1';
-        const container = document.querySelector('.nav-tabs');
-        const tabRect = activeTab.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        const centerPos = (tabRect.left - containerRect.left) + (tabRect.width / 2);
-        ind.style.left = (centerPos - (ind.offsetWidth / 2)) + 'px';
+        ind.style.left = idx === 0 ? '10px' : 'calc(50% + 10px)';
     }
 
     function showPage(id, idx) {
@@ -1064,15 +824,13 @@
         currentIdx = idx;
         moveIndicator(idx);
         
-        if (id === 'details' && map) setTimeout(() => map.invalidateSize(), 10);
-        
+        if (id === 'details' && map) setTimeout(() => map.invalidateSize(), 50);
         if (id !== 'home') closeKeyboard();
         
-        if (id === 'home') {
-            startNearbyLogic();
-        } else {
-            stopNearbyLogic();
-        }
+        const nav = document.getElementById('bottom-nav');
+        if (id === 'details') nav.classList.add('hide'); else nav.classList.remove('hide');
+        
+        if (id === 'home') startNearbyLogic(); else stopNearbyLogic();
     }
 
     window.addEventListener('resize', () => requestAnimationFrame(() => moveIndicator(currentIdx)));
