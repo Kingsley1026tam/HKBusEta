@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- Leaflet Engine for road-mapping -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Lucide Icon Elements -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
@@ -16,7 +14,7 @@
             --surface-color: #ffffff;
             --text-color: #1c1c1e;
             --text-muted: #8e8e93;
-            --primary-color: #ffcc00; /* Official Hong Kong Bus Yellow */
+            --primary-color: #ffcc00; 
             --kmb-red: #ff3b30;
             --border-color: #e5e5ea;
             --nav-bg: rgba(255, 255, 255, 0.94);
@@ -28,7 +26,7 @@
             margin: 0;
             padding: 0;
             touch-action: manipulation;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
             -webkit-user-select: none;
             user-select: none;
         }
@@ -44,72 +42,74 @@
             padding-top: env(safe-area-inset-top);
         }
 
-        /* SCREEN CONTAINER MODIFIERS */
         .screen {
             flex: 1;
             display: none;
             overflow-y: auto;
-            padding: 16px;
+            position: relative;
         }
 
         .screen.active {
             display: block;
         }
 
-        h2 {
+        .header-title {
             font-size: 24px;
             font-weight: 700;
-            margin-bottom: 16px;
-            letter-spacing: -0.5px;
+            padding: 16px;
+            background: var(--bg-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        /* iOS-STYLE SEARCH BAR */
+        /* SEARCH BAR */
         .search-bar-ios {
             background: rgba(118, 118, 128, 0.12);
             border-radius: 10px;
             padding: 12px;
+            margin: 0 16px 14px 16px;
             font-size: 20px;
             font-weight: 600;
             min-height: 48px;
             display: flex;
             align-items: center;
-            margin-bottom: 14px;
             color: var(--text-color);
         }
 
-        /* FIX KEYBOARD OVERLAY AREA */
+        /* SMART KEYBOARD LAYOUT */
         .keyboard-container {
             display: flex;
             background: var(--surface-color);
             border-top: 1px solid var(--border-color);
             padding: 12px;
-            gap: 10px;
+            gap: 12px;
             position: fixed;
             bottom: 92px;
             left: 0;
             right: 0;
             z-index: 1000;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            height: 240px; /* Fixed height container */
         }
 
         .numpad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(4, 1fr);
             gap: 8px;
             flex: 3;
         }
 
+        /* 2-column uniform grid mapping precisely to the numpad height */
         .letter-pad {
             flex: 2;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            align-content: flex-start;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 8px;
             background: rgba(118, 118, 128, 0.05);
-            padding: 6px;
+            padding: 8px;
             border-radius: 8px;
-            max-height: 190px;
-            overflow-y: auto;
         }
 
         .key {
@@ -117,104 +117,95 @@
             color: var(--text-color);
             border: none;
             box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-            padding: 12px;
-            text-align: center;
             border-radius: 6px;
             font-weight: 600;
             font-size: 19px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
         }
 
-        .key:active {
-            background: #d1d1d6;
-        }
+        .key:active { background: #d1d1d6; }
+        .key-wide { grid-column: span 2; }
+        .key-hidden { visibility: hidden; } /* Keeps grid structure intact when letters are unavailable */
 
-        .key-wide {
-            grid-column: span 2;
-        }
-
-        .letter-btn {
-            padding: 8px 10px;
-            background: #ffffff;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        /* BUS LIST LAYOUTS */
+        /* ROUTE CARDS */
+        .route-list-container { padding: 0 16px; }
         .route-card {
             background: var(--surface-color);
             border-radius: 12px;
             margin-bottom: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.04);
             border: 1px solid var(--border-color);
-            overflow: hidden;
-        }
-
-        .route-header {
             padding: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             cursor: pointer;
         }
 
-        .route-details {
+        /* ROUTE DETAIL VIEW (Single Map + Stops) */
+        #route-detail-view {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-color);
+            z-index: 5000;
             display: none;
-            border-top: 1px solid var(--border-color);
-            background: #fdfdfd;
+            flex-direction: column;
+            padding-bottom: calc(92px + env(safe-area-inset-bottom));
+        }
+        #route-detail-view.active { display: flex; }
+
+        .route-detail-header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-top: max(16px, env(safe-area-inset-top));
         }
 
-        .route-details.open {
-            display: block;
+        .back-btn {
+            font-size: 16px;
+            color: var(--kmb-red);
+            margin-right: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
         }
 
-        .map-container {
-            height: 200px;
+        .single-map-container {
+            height: 35vh; /* Takes up 35% of screen height at the top */
             width: 100%;
             background: #e5e5ea;
+            flex-shrink: 0;
         }
 
-        /* CHRONOLOGICAL BUS NODE SEQUENCES */
-        .station-node {
-            border-left: 3px solid #d1d1d6;
-            margin-left: 24px;
-            padding: 12px 16px;
-            position: relative;
+        .stops-scroll-container {
+            flex: 1;
+            overflow-y: auto;
             background: var(--surface-color);
         }
 
-        .station-node.is-near {
-            border-left: 3px solid var(--kmb-red);
-            background: rgba(255, 59, 48, 0.03);
+        /* STATIONS LIST */
+        .station-node {
+            border-left: 3px solid #d1d1d6;
+            margin-left: 24px;
+            padding: 14px 16px;
+            position: relative;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
         }
+        .station-node:active { background: #f2f2f7; }
 
         .station-node::before {
             content: '';
             position: absolute;
-            left: -7px;
-            top: 16px;
-            width: 11px;
-            height: 11px;
+            left: -8px;
+            top: 18px;
+            width: 13px;
+            height: 13px;
             border-radius: 50%;
             background: white;
             border: 3px solid #8e8e93;
-        }
-
-        .station-node.is-near::before {
-            border-color: var(--kmb-red);
-            background: var(--kmb-red);
-        }
-
-        .eta-block {
-            display: none;
-            margin-top: 8px;
-            gap: 6px;
-        }
-
-        .station-node.is-near .eta-block {
-            display: flex;
         }
 
         .eta-badge {
@@ -224,9 +215,12 @@
             border-radius: 6px;
             font-size: 13px;
             font-weight: 700;
+            margin-right: 6px;
+            display: inline-block;
+            margin-top: 8px;
         }
 
-        /* BOTTOM NAVBAR (IMAGE.PNG NAVIGATION STYLE STYLING MATCH) */
+        /* BOTTOM NAVBAR */
         .bottom-nav {
             position: fixed;
             bottom: 20px;
@@ -246,363 +240,384 @@
         }
 
         .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            cursor: pointer;
-            flex: 1;
-            font-size: 11px;
-            font-weight: 500;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-muted); cursor: pointer; flex: 1; font-size: 11px; font-weight: 500;
         }
-
-        .nav-item i {
-            width: 22px;
-            height: 22px;
-            margin-bottom: 3px;
-        }
-
-        .nav-item.active {
-            color: var(--text-color);
-        }
-
+        .nav-item i { width: 22px; height: 22px; margin-bottom: 3px; }
+        .nav-item.active { color: var(--text-color); }
         .nav-item.center-action {
-            flex: 0 0 58px;
-            height: 58px;
-            background-color: var(--primary-color);
-            border-radius: 50%;
-            color: #1c1c1e !important;
-            transform: translateY(-10px);
+            flex: 0 0 58px; height: 58px; background-color: var(--primary-color);
+            border-radius: 50%; color: #1c1c1e !important; transform: translateY(-10px);
             box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
         }
-
-        .nav-item.center-action i {
-            margin-bottom: 0;
-            width: 24px;
-            height: 24px;
-        }
+        .nav-item.center-action i { margin-bottom: 0; width: 24px; height: 24px; }
     </style>
 </head>
 <body>
 
-    <!-- HOME SCREEN -->
+    <!-- HOME (NEARBY) SCREEN -->
     <div id="screen-home" class="screen active">
-        <h2>附近巴士線 / Nearby Buses</h2>
-        <div id="home-live-container">
-            <!-- Populated via live endpoints tracking the closest station context -->
+        <div class="header-title">附近巴士站 / Nearby</div>
+        <div class="route-list-container" id="home-live-container">
+            <div style="text-align:center; padding: 40px 20px; color:var(--text-muted);">
+                <i data-lucide="map-pin" style="width:32px;height:32px;margin-bottom:10px;"></i>
+                <p>正在獲取您的 GPS 位置及附近車站...</p>
+            </div>
         </div>
     </div>
 
-    <!-- ALL ROUTES LIST SCREEN -->
+    <!-- ALL ROUTES SCREEN -->
     <div id="screen-routes" class="screen">
-        <h2>巴士路線清單 / Routes</h2>
-        <div id="api-routes-container">
-            <p style="padding:12px; color:var(--text-muted);">正在從 Data.gov.hk 下載實時路線庫...</p>
-        </div>
+        <div class="header-title">所有路線 / All Routes</div>
+        <div class="route-list-container" id="api-routes-container"></div>
     </div>
 
-    <!-- SEARCH PANEL SCREEN -->
-    <div id="screen-search" class="screen" style="padding-bottom: 320px;">
-        <h2>搜尋路線 / Search</h2>
-        <div class="search-bar-ios" id="search-display">輸入路線號碼...</div>
-        
-        <div id="search-api-results"></div>
+    <!-- SEARCH SCREEN -->
+    <div id="screen-search" class="screen" style="padding-bottom: 350px;">
+        <div class="header-title">搜尋 / Search</div>
+        <div class="search-bar-ios" id="search-display"></div>
+        <div class="route-list-container" id="search-api-results"></div>
 
-        <!-- Custom Virtual Numeric Keyboard -->
         <div class="keyboard-container">
             <div class="numpad">
-                <div class="key" onclick="appendSearch('7')">7</div>
-                <div class="key" onclick="appendSearch('8')">8</div>
-                <div class="key" onclick="appendSearch('9')">9</div>
-                <div class="key" onclick="appendSearch('4')">4</div>
-                <div class="key" onclick="appendSearch('5')">5</div>
-                <div class="key" onclick="appendSearch('6')">6</div>
-                <div class="key" onclick="appendSearch('1')">1</div>
-                <div class="key" onclick="appendSearch('2')">2</div>
-                <div class="key" onclick="appendSearch('3')">3</div>
-                <div class="key key-wide" onclick="appendSearch('0')">0</div>
-                <div class="key" onclick="clearSearch()">⌫</div>
+                <div class="key" onclick="typeKey('7')">7</div>
+                <div class="key" onclick="typeKey('8')">8</div>
+                <div class="key" onclick="typeKey('9')">9</div>
+                <div class="key" onclick="typeKey('4')">4</div>
+                <div class="key" onclick="typeKey('5')">5</div>
+                <div class="key" onclick="typeKey('6')">6</div>
+                <div class="key" onclick="typeKey('1')">1</div>
+                <div class="key" onclick="typeKey('2')">2</div>
+                <div class="key" onclick="typeKey('3')">3</div>
+                <div class="key key-wide" onclick="typeKey('0')">0</div>
+                <div class="key" onclick="backspace()">⌫</div>
             </div>
-            <div class="letter-pad" id="letters-grid"></div>
+            <div class="letter-pad" id="letters-grid">
+                <!-- Javascript will inject fixed-size English keys here -->
+            </div>
         </div>
     </div>
 
-    <!-- HISTORY TRACKING SCREEN -->
-    <div id="screen-history" class="screen">
-        <h2>紀錄 / Search History</h2>
-        <div id="history-list"></div>
-    </div>
-
-    <!-- SETTINGS PANELS -->
-    <div id="screen-settings" class="screen">
-        <h2>設定 / Settings</h2>
-        <div style="background:#fff; border-radius:12px; padding:16px; border:1px solid var(--border-color);">
-            <p style="font-weight:600; margin-bottom:4px;">數據來源 / Data Source</p>
-            <p style="color:var(--text-muted); font-size:14px;">香港政府資料一線通 DATA.GOV.HK 公開 API</p>
-            <hr style="margin:12px 0; border:none; border-top:1px solid var(--border-color);">
-            <p style="font-weight:600; margin-bottom:4px;">顯示主題 / Current Theme</p>
-            <p style="color:var(--text-muted); font-size:14px;">官方黃色明亮模式 / Official Light Mode</p>
+    <!-- ROUTE DETAIL VIEW (OVERLAY WITH SINGLE TOP MAP) -->
+    <div id="route-detail-view">
+        <div class="route-detail-header">
+            <div class="back-btn" onclick="closeRouteDetail()"><i data-lucide="chevron-left"></i> 返回</div>
+            <div style="font-weight: 700; font-size:18px;" id="detail-title">--</div>
         </div>
+        <!-- SINGLE MAP FIXED AT TOP OF VIEW -->
+        <div id="main-route-map" class="single-map-container"></div>
+        
+        <div class="stops-scroll-container" id="stops-list-container"></div>
     </div>
 
-    <!-- FLOATING TAB NAVIGATOR BAR MAPPED TO image.png PROPORTIONS -->
+    <!-- NAVIGATION -->
     <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('home', this)">
-            <i data-lucide="home"></i>
-            <span>主頁</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('routes', this)">
-            <i data-lucide="layers"></i>
-            <span>所有路線</span>
-        </div>
-        <div class="nav-item center-action" onclick="switchTab('search', this)">
-            <i data-lucide="search"></i>
-        </div>
-        <div class="nav-item" onclick="switchTab('history', this)">
-            <i data-lucide="clock"></i>
-            <span>紀錄</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('settings', this)">
-            <i data-lucide="settings"></i>
-            <span>設定</span>
-        </div>
+        <div class="nav-item active" onclick="switchTab('home', this)"><i data-lucide="home"></i><span>主頁</span></div>
+        <div class="nav-item" onclick="switchTab('routes', this)"><i data-lucide="layers"></i><span>路線</span></div>
+        <div class="nav-item center-action" onclick="switchTab('search', this)"><i data-lucide="search"></i></div>
     </nav>
 
     <script>
-        // OFFICIAL GOVERNMENT PUBLIC API PARSING DATA
-        const DATA_GOV_HK_ROUTE_API = "https://data.etabus.gov.hk/v1/transport/kmb/route/";
+        const API_BASE = "https://data.etabus.gov.hk/v1/transport/kmb";
         let queryStr = "";
-        let globalHistory = ["1A", "6", "968"];
-        let activeMaps = {};
+        let allRoutesCache = [];
+        let globalStopsCache = [];
         
-        // Mock current coordinate location benchmark near Nathan Road, HK
-        const userLat = 22.3193; 
-        const userLng = 114.1693;
+        // Single Map Instance
+        let routeMap = null;
+        let mapPolyline = null;
+        let mapMarkers = [];
 
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
             lucide.createIcons();
-            buildLetterPad();
-            loadGovDataRoutes();
-            loadHistoryData();
-            loadHomeLiveETA();
+            updateKeyboard();
+            await fetchAllRoutes();
+            locateAndFetchNearby();
         });
 
         function switchTab(target, element) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
             document.getElementById(`screen-${target}`).classList.add('active');
             if(element) element.classList.add('active');
         }
 
-        // LOAD REAL DATA.GOV.HK ROUTES
-        async function loadGovDataRoutes() {
-            const container = document.getElementById('api-routes-container');
-            try {
-                const res = await fetch(DATA_GOV_HK_ROUTE_API);
-                const json = await res.json();
-                const sampleRecords = json.data.slice(0, 20); 
-                
-                container.innerHTML = "";
-                sampleRecords.forEach(r => {
-                    const card = document.createElement('div');
-                    card.className = "route-card";
-                    card.innerHTML = `
-                        <div class="route-header" onclick="drillRouteLiveStops('${r.route}', '${r.bound}', '${r.service_type}')">
-                            <div><strong>${r.route}</strong></div>
-                            <div style="font-size:13px; color:var(--text-muted);">${r.orig_tc} ➔ ${r.dest_tc}</div>
-                        </div>
-                        <div class="route-details" id="det-${r.route}-${r.bound}">
-                            <div id="map-${r.route}-${r.bound}" class="map-container"></div>
-                            <div class="stations-nodes-container" id="nodes-${r.route}-${r.bound}"></div>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-            } catch (err) {
-                container.innerHTML = `<p style="color:red; padding:12px;">無法讀取政府公開數據，請重試。</p>`;
+        // ==========================================
+        // REAL GEOLOCATION & NEARBY LOGIC
+        // ==========================================
+        async function locateAndFetchNearby() {
+            const container = document.getElementById('home-live-container');
+            if (!navigator.geolocation) {
+                container.innerHTML = `<p style="padding:20px; color:red;">您的瀏覽器不支援定位功能。</p>`;
+                return;
             }
-        }
 
-        // AUTO-EXPAND ONLY IF IN PROXIMITY, HIDE OTHERS
-        async function drillRouteLiveStops(route, bound, serviceType) {
-            const id = `det-${route}-${bound}`;
-            const targetPane = document.getElementById(id);
-            const isOpen = targetPane.classList.contains('open');
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const userLat = pos.coords.latitude;
+                const userLng = pos.coords.longitude;
 
-            document.querySelectorAll('.route-details').forEach(d => d.classList.remove('open'));
+                // Fetch all stops to find nearest (Only way via Data.gov.hk)
+                if(globalStopsCache.length === 0) {
+                    try {
+                        const res = await fetch(`${API_BASE}/stop`);
+                        const json = await res.json();
+                        globalStopsCache = json.data;
+                    } catch(e) {
+                        container.innerHTML = `<p>無法獲取車站數據庫。</p>`;
+                        return;
+                    }
+                }
 
-            if (!isOpen) {
-                targetPane.classList.add('open');
-                
-                const nodesContainer = document.getElementById(`nodes-${route}-${bound}`);
-                nodesContainer.innerHTML = `<p style="padding:14px; font-size:13px; color:var(--text-muted);">正在載入實時中途站...</p>`;
+                // Calculate distances using Haversine
+                let distances = globalStopsCache.map(stop => {
+                    return { ...stop, dist: getDistance(userLat, userLng, stop.lat, stop.long) };
+                });
+                distances.sort((a, b) => a.dist - b.dist);
+                const nearestStops = distances.slice(0, 3); // Get 3 closest
 
-                try {
-                    const stopRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${bound}/${serviceType}`);
-                    const stopJson = await stopRes.json();
+                container.innerHTML = `<div style="padding-bottom:12px;font-size:14px;color:var(--text-muted);">已找到附近車站，正在獲取班次...</div>`;
+
+                for (let stop of nearestStops) {
+                    // Fetch ETA for this specific real stop
+                    const etaRes = await fetch(`${API_BASE}/stop-eta/${stop.stop}`);
+                    const etaJson = await etaRes.json();
                     
-                    nodesContainer.innerHTML = "";
-                    setTimeout(() => { generateRoadPolylineMap(route, bound); }, 100);
+                    // Group by route
+                    const grouped = {};
+                    etaJson.data.forEach(eta => {
+                        if(!eta.eta) return;
+                        if(!grouped[eta.route]) grouped[eta.route] = [];
+                        grouped[eta.route].push(eta);
+                    });
 
-                    // Loop dynamic stops to flag proximity matching
-                    for(let i = 0; i < stopJson.data.slice(0, 10).length; i++) {
-                        const stopMeta = stopJson.data[i];
-                        const stopDetailRes = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop/${stopMeta.stop}`);
-                        const stopDetail = await stopDetailRes.json();
-                        const sData = stopDetail.data;
-
-                        // Identify nearby stop match context indices
-                        const isNearStation = (i === 1); 
-
-                        const nodeDiv = document.createElement('div');
-                        nodeDiv.className = `station-node ${isNearStation ? 'is-near' : ''}`;
-                        
-                        let etaHtml = '';
-                        if (isNearStation) {
-                            // If user is at this near station, open it and fetch/show upcoming 3 bus times
-                            etaHtml = `
-                                <div class="eta-block">
-                                    <span class="eta-badge">2 分鐘</span>
-                                    <span class="eta-badge" style="background:#ff9500;">11 分鐘</span>
-                                    <span class="eta-badge" style="background:#8e8e93;">24 分鐘</span>
+                    const stopCard = document.createElement('div');
+                    stopCard.style.marginBottom = "24px";
+                    stopCard.innerHTML = `<h3 style="font-size:16px; margin-bottom:8px;"><i data-lucide="map-pin" style="width:16px;height:16px;display:inline;"></i> ${stop.name_tc} <span style="font-size:12px;color:#8e8e93;">(約 ${Math.round(stop.dist)} 米)</span></h3>`;
+                    
+                    if (Object.keys(grouped).length === 0) {
+                        stopCard.innerHTML += `<p style="font-size:13px; color:var(--text-muted);">暫無班次數據</p>`;
+                    } else {
+                        Object.keys(grouped).slice(0,4).forEach(route => {
+                            const times = grouped[route].slice(0,2).map(t => {
+                                const min = Math.round((new Date(t.eta) - new Date()) / 60000);
+                                return `<span class="eta-badge">${min <= 0 ? '即將到站' : min + ' 分鐘'}</span>`;
+                            }).join("");
+                            
+                            const div = document.createElement('div');
+                            div.className = "route-card";
+                            div.innerHTML = `
+                                <div style="display:flex; justify-content:space-between; align-items:center;" onclick="openRouteDetail('${route}', '${grouped[route][0].dir}', '1')">
+                                    <div style="font-size:20px; font-weight:800; color:var(--kmb-red);">${route}</div>
+                                    <div style="text-align:right;">${times}</div>
                                 </div>
                             `;
-                        } else {
-                            // If not near, keep the ETA closed/hidden
-                            etaHtml = `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">點擊刷新此站時間</div>`;
-                        }
-
-                        nodeDiv.innerHTML = `
-                            <div style="font-weight:600; font-size:14px;">${sData.name_tc}</div>
-                            ${etaHtml}
-                        `;
-                        
-                        nodeDiv.onclick = (e) => {
-                            e.stopPropagation();
-                            alert(`已向政府 API 重新整理 [${sData.name_tc}] 班次預估。`);
-                        };
-
-                        nodesContainer.appendChild(nodeDiv);
+                            stopCard.appendChild(div);
+                        });
                     }
-                } catch (e) {
-                    nodesContainer.innerHTML = `<p style="padding:12px; color:red;">加載路線失敗。</p>`;
+                    container.appendChild(stopCard);
                 }
-            }
+                lucide.createIcons();
+            }, (err) => {
+                container.innerHTML = `<p style="padding:20px; color:red;">定位失敗，請確保已授權位置權限。</p>`;
+            }, { enableHighAccuracy: true, timeout: 10000 });
         }
 
-        // ROAD-BASED POLYLINE MAP PATHING CONNECTING STATIONS SEQUENTIALLY
-        function generateRoadPolylineMap(route, bound) {
-            const mapId = `map-${route}-${bound}`;
-            if(activeMaps[mapId]) return;
-
-            const map = L.map(mapId, { zoomControl: false }).setView([userLat, userLng], 14);
-            activeMaps[mapId] = map;
-
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-            // Connect stops explicitly via actual road alignment trajectories
-            const roadAlignmentPoints = [
-                [22.3120, 114.1680],
-                [22.3155, 114.1685],
-                [22.3193, 114.1693], 
-                [22.3240, 114.1705]
-            ];
-
-            L.polyline(roadAlignmentPoints, { color: '#ffcc00', weight: 6, opacity: 0.9 }).addTo(map);
-            
-            // Render Current Position Marker
-            L.circleMarker([userLat, userLng], { radius: 7, fillColor: '#007aff', color: '#fff', weight: 2, fillOpacity: 1 }).addTo(map);
+        // Haversine Distance Formula
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // metres
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lon2-lon1) * Math.PI/180;
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
         }
 
-        // HOME PAGE DATA INSIGHTS
-        function loadHomeLiveETA() {
-            const container = document.getElementById('home-live-container');
-            container.innerHTML = `
-                <div class="route-card" style="padding:16px;" onclick="switchTab('routes');">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <span style="font-weight:800; font-size:20px; color:var(--kmb-red);">1A</span>
-                            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">最接近車站: 旺角奶路臣街</div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:19px; font-weight:800; color:#34c759;">3 分鐘</div>
-                            <div style="font-size:11px; color:var(--text-muted);">下班車: 14 分鐘</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // SEARCH CONTROL PROCEDURES
-        function appendSearch(val) {
-            if (queryStr === "") document.getElementById('search-display').innerText = "";
-            queryStr += val;
-            document.getElementById('search-display').innerText = queryStr;
-            searchFilterDataGov();
-        }
-
-        function clearSearch() {
-            queryStr = queryStr.slice(0, -1);
-            document.getElementById('search-display').innerText = queryStr || "輸入路線號碼...";
-            searchFilterDataGov();
-        }
-
-        function buildLetterPad() {
-            const grid = document.getElementById('letters-grid');
-            grid.innerHTML = "";
-            const letters = ["A", "B", "E", "N", "NA", "P", "R", "S", "X", "K"];
-            letters.forEach(l => {
-                const btn = document.createElement('button');
-                btn.className = "key letter-btn";
-                btn.innerText = l;
-                btn.onclick = () => appendSearch(l);
-                grid.appendChild(btn);
-            });
-        }
-
-        async function searchFilterDataGov() {
-            const container = document.getElementById('search-api-results');
-            if(!queryStr) { container.innerHTML = ""; return; }
-
+        // ==========================================
+        // ALL ROUTES & SEARCH DATA
+        // ==========================================
+        async function fetchAllRoutes() {
             try {
-                const res = await fetch(DATA_GOV_HK_ROUTE_API);
+                const res = await fetch(`${API_BASE}/route/`);
                 const json = await res.json();
-                const matched = json.data.filter(r => r.route.toLowerCase().startsWith(queryStr.toLowerCase())).slice(0, 4);
-
-                container.innerHTML = "";
-                matched.forEach(r => {
-                    const div = document.createElement('div');
-                    div.className = "route-card";
-                    div.innerHTML = `
-                        <div class="route-header" onclick="addToHistory('${r.route}')">
-                            <div><strong>${r.route}</strong></div>
-                            <div style="font-size:12px; color:var(--text-muted);">${r.orig_tc} ➔ ${r.dest_tc}</div>
-                        </div>
-                    `;
-                    container.appendChild(div);
-                });
+                allRoutesCache = json.data;
+                renderRoutesList(allRoutesCache.slice(0, 30), 'api-routes-container');
             } catch(e) {}
         }
 
-        function addToHistory(route) {
-            if(!globalHistory.includes(route)) globalHistory.unshift(route);
-            loadHistoryData();
-            alert(`已新增 ${route} 至歷史搜尋名單`);
+        function renderRoutesList(routes, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+            routes.forEach(r => {
+                const card = document.createElement('div');
+                card.className = "route-card";
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong style="font-size:18px;">${r.route}</strong>
+                        <span style="font-size:13px; color:var(--text-muted);">${r.orig_tc} ➔ ${r.dest_tc}</span>
+                    </div>
+                `;
+                card.onclick = () => openRouteDetail(r.route, r.bound, r.service_type);
+                container.appendChild(card);
+            });
         }
 
-        function loadHistoryData() {
-            const container = document.getElementById('history-list');
-            container.innerHTML = "";
-            globalHistory.forEach(h => {
-                const div = document.createElement('div');
-                div.className = "route-card";
-                div.style.padding = "16px";
-                div.innerHTML = `<strong>路線 ${h}</strong> <span style="float:right; color:var(--text-muted);">重新查詢</span>`;
-                div.onclick = () => { queryStr = h; document.getElementById('search-display').innerText = h; switchTab('search'); searchFilterDataGov(); };
-                container.appendChild(div);
-            });
+        // ==========================================
+        // SINGLE MAP & ROUTE DETAIL VIEW
+        // ==========================================
+        async function openRouteDetail(route, bound, serviceType) {
+            document.getElementById('route-detail-view').classList.add('active');
+            document.getElementById('detail-title').innerText = `路線 ${route}`;
+            const container = document.getElementById('stops-list-container');
+            container.innerHTML = `<p style="padding:16px;">正在載入車站資料及地圖...</p>`;
+
+            // Initialize Single Map if needed
+            if (!routeMap) {
+                routeMap = L.map('main-route-map', { zoomControl: false }).setView([22.3193, 114.1693], 12);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(routeMap);
+            }
+            routeMap.invalidateSize(); // Ensure it renders properly in display:flex
+            
+            // Clear old layers
+            if(mapPolyline) routeMap.removeLayer(mapPolyline);
+            mapMarkers.forEach(m => routeMap.removeLayer(m));
+            mapMarkers = [];
+
+            try {
+                // Get Stops for this specific Route
+                const routeStopRes = await fetch(`${API_BASE}/route-stop/${route}/${bound}/${serviceType}`);
+                const routeStopJson = await routeStopRes.json();
+                
+                container.innerHTML = "";
+                let latlngs = [];
+
+                for(let i = 0; i < routeStopJson.data.length; i++) {
+                    const rs = routeStopJson.data[i];
+                    // Find coordinate from global cache if available to save API calls
+                    let stopData = globalStopsCache.find(s => s.stop === rs.stop);
+                    
+                    if(!stopData) {
+                        const sRes = await fetch(`${API_BASE}/stop/${rs.stop}`);
+                        const sJson = await sRes.json();
+                        stopData = sJson.data;
+                    }
+
+                    const lat = parseFloat(stopData.lat);
+                    const lng = parseFloat(stopData.long);
+                    latlngs.push([lat, lng]);
+
+                    // Add Marker to Single Map
+                    const marker = L.circleMarker([lat, lng], { radius: 5, fillColor: '#ff3b30', color: '#fff', weight: 2, fillOpacity: 1 }).addTo(routeMap);
+                    mapMarkers.push(marker);
+
+                    // Add to List
+                    const node = document.createElement('div');
+                    node.className = "station-node";
+                    node.innerHTML = `
+                        <div style="font-weight:600; font-size:15px;">${stopData.name_tc}</div>
+                        <div id="eta-${rs.stop}" style="min-height:20px; font-size:12px; color:var(--text-muted); margin-top:4px;">點擊查看時間及定位</div>
+                    `;
+                    
+                    // Click Station -> Pan Map & Fetch ETA
+                    node.onclick = async () => {
+                        routeMap.panTo([lat, lng]);
+                        routeMap.setZoom(16);
+                        
+                        // highlight selection visually
+                        document.querySelectorAll('.station-node').forEach(n => n.style.background = 'transparent');
+                        node.style.background = 'rgba(255, 59, 48, 0.05)';
+                        
+                        document.getElementById(`eta-${rs.stop}`).innerHTML = "讀取中...";
+                        const eRes = await fetch(`${API_BASE}/stop-eta/${rs.stop}`);
+                        const eJson = await eRes.json();
+                        const rEta = eJson.data.filter(e => e.route === route);
+                        
+                        if(rEta.length === 0 || !rEta[0].eta) {
+                            document.getElementById(`eta-${rs.stop}`).innerHTML = "暫無班次";
+                        } else {
+                            document.getElementById(`eta-${rs.stop}`).innerHTML = rEta.slice(0,3).map(t => {
+                                const min = Math.round((new Date(t.eta) - new Date()) / 60000);
+                                return `<span class="eta-badge">${min <= 0 ? '即將到站' : min + ' 分鐘'}</span>`;
+                            }).join("");
+                        }
+                    };
+                    container.appendChild(node);
+                }
+
+                // Draw connecting line
+                if (latlngs.length > 0) {
+                    mapPolyline = L.polyline(latlngs, { color: '#ffcc00', weight: 5, opacity: 0.9 }).addTo(routeMap);
+                    routeMap.fitBounds(mapPolyline.getBounds());
+                }
+
+            } catch(e) {
+                container.innerHTML = `<p>無法獲取車站數據。</p>`;
+            }
+        }
+
+        function closeRouteDetail() {
+            document.getElementById('route-detail-view').classList.remove('active');
+        }
+
+        // ==========================================
+        // SMART KEYBOARD SEQUENCE LOGIC
+        // ==========================================
+        function typeKey(char) {
+            queryStr += char;
+            updateSearch();
+        }
+        function backspace() {
+            queryStr = queryStr.slice(0, -1);
+            updateSearch();
+        }
+
+        function updateSearch() {
+            const display = document.getElementById('search-display');
+            display.innerText = queryStr || "請輸入路線...";
+            display.style.color = queryStr ? "var(--text-color)" : "var(--text-muted)";
+            
+            updateKeyboard();
+            
+            if (queryStr) {
+                const matched = allRoutesCache.filter(r => r.route.toUpperCase().startsWith(queryStr)).slice(0, 5);
+                renderRoutesList(matched, 'search-api-results');
+            } else {
+                document.getElementById('search-api-results').innerHTML = "";
+            }
+        }
+
+        function updateKeyboard() {
+            const grid = document.getElementById('letters-grid');
+            grid.innerHTML = "";
+            
+            // Available buttons mapping (max 8 keys to fit 2x4 grid perfectly)
+            let keysToShow = [];
+
+            if (queryStr === "") {
+                keysToShow = ['N', 'E', 'A', 'S', 'P', 'R', 'X', 'K'];
+            } else if (queryStr === "S") {
+                // If typed S, immediately make P available (for SP)
+                keysToShow = ['P'];
+            } else if (queryStr === "N") {
+                keysToShow = ['A'];
+            } else if (/\d$/.test(queryStr)) {
+                // If ends in number, show common suffixes
+                keysToShow = ['A', 'B', 'C', 'P', 'S', 'X', 'M', 'R'];
+            }
+
+            // Always render 8 slots to maintain grid shape integrity and sizing
+            for (let i = 0; i < 8; i++) {
+                const btn = document.createElement('button');
+                if (i < keysToShow.length) {
+                    btn.className = "key";
+                    btn.innerText = keysToShow[i];
+                    btn.onclick = () => typeKey(keysToShow[i]);
+                } else {
+                    btn.className = "key key-hidden"; 
+                }
+                grid.appendChild(btn);
+            }
         }
     </script>
 </body>
