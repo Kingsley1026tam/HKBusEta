@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>bus@魚蛋頭冇尊嚴</title>
+    <title>Bus Eta</title>
+    
+    <!-- 加入 Favicon 設定 -->
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -44,7 +47,6 @@
             overflow-y: auto;
             overflow-x: hidden;
             display: none;
-            /* 移除原本的 padding-top，避免列表在 sticky search bar 上方溢出 */
             padding: 0 15px 20px 15px; 
         }
 
@@ -110,7 +112,6 @@
             color: var(--text-main);
         }
 
-        /* 公司標籤樣式 - 淺色設計 (Pastel style) */
         .bus-co {
             font-size: 11px;
             padding: 3px 8px;
@@ -119,11 +120,11 @@
             white-space: nowrap;
         }
         .bus-co.kmb { 
-            background-color: #FDE8E8; /* 淺紅 */
+            background-color: #FDE8E8;
             color: #E3002B; 
         } 
         .bus-co.ctb { 
-            background-color: var(--kmb-yellow-light); /* 淺黃 */
+            background-color: var(--kmb-yellow-light);
             color: var(--kmb-text-dark); 
         }
 
@@ -153,7 +154,7 @@
             position: sticky;
             top: 0;
             background: var(--bg-color);
-            padding-top: 15px; /* 將上邊距移至此處，修復頂端破圖 */
+            padding-top: 15px;
             padding-bottom: 15px;
             z-index: 10;
         }
@@ -339,7 +340,7 @@
         const CTB_API_BASE = 'https://rt.data.gov.hk/v2/transport/citybus';
         
         let allKMBStops = [];
-        let allRoutes = []; // 整合九巴與城巴
+        let allRoutes = []; 
         let currentRouteStops = [];
         let ctbStopsCache = {}; 
         
@@ -361,7 +362,7 @@
             return diff <= 0 ? '即將抵達' : `${diff}分鐘`;
         }
 
-        async function initNearby() {
+        function initNearby() {
             if (!navigator.geolocation) {
                 alert("您的瀏覽器不支援定位功能");
                 return;
@@ -369,52 +370,62 @@
             
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                
-                try {
+                fetchNearbyData();
+            }, (err) => {
+                console.warn("GPS 定位失敗", err);
+                document.getElementById('nearby-loading').innerHTML = '<p>無法取得定位，請檢查手機定位權限或重新整理</p>';
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        }
+
+        async function fetchNearbyData() {
+            if (!userLocation) return;
+            try {
+                if (allKMBStops.length === 0) {
                     const res = await fetch(`${KMB_API_BASE}/stop`);
                     const data = await res.json();
                     allKMBStops = data.data;
-
-                    const nearbyStops = allKMBStops
-                        .map(stop => ({ ...stop, distance: getDistance(userLocation.lat, userLocation.lng, stop.lat, stop.long) }))
-                        .sort((a, b) => a.distance - b.distance)
-                        .slice(0, 3);
-
-                    let nearbyRoutes = [];
-                    for (let stop of nearbyStops) {
-                        const etaRes = await fetch(`${KMB_API_BASE}/stop-eta/${stop.stop}`);
-                        const etaData = await etaRes.json();
-                        const validEtas = etaData.data.filter(e => e.eta);
-                        
-                        const seenRoutes = new Set();
-                        validEtas.forEach(e => {
-                            const routeKey = `${e.route}-${e.dir}`;
-                            if (!seenRoutes.has(routeKey)) {
-                                seenRoutes.add(routeKey);
-                                nearbyRoutes.push({
-                                    co: 'KMB',
-                                    route: e.route,
-                                    dest: e.dest_tc,
-                                    nearStation: stop.name_tc,
-                                    eta: calcMinutes(e.eta),
-                                    dir: e.dir,
-                                    service_type: e.service_type
-                                });
-                            }
-                        });
-                    }
-
-                    document.getElementById('nearby-loading').style.display = 'none';
-                    renderNearbyList(nearbyRoutes);
-
-                } catch (err) {
-                    console.error(err);
-                    document.getElementById('nearby-loading').innerHTML = '<p>API失敗</p>';
                 }
-            }, (err) => {
-                alert("請允許定位權限");
-                document.getElementById('nearby-loading').innerHTML = '<p>需要定位權限</p>';
-            });
+
+                const nearbyStops = allKMBStops
+                    .map(stop => ({ ...stop, distance: getDistance(userLocation.lat, userLocation.lng, stop.lat, stop.long) }))
+                    .sort((a, b) => a.distance - b.distance)
+                    .slice(0, 3);
+
+                let nearbyRoutes = [];
+                for (let stop of nearbyStops) {
+                    const etaRes = await fetch(`${KMB_API_BASE}/stop-eta/${stop.stop}`);
+                    const etaData = await etaRes.json();
+                    const validEtas = etaData.data.filter(e => e.eta);
+                    
+                    const seenRoutes = new Set();
+                    validEtas.forEach(e => {
+                        const routeKey = `${e.route}-${e.dir}`;
+                        if (!seenRoutes.has(routeKey)) {
+                            seenRoutes.add(routeKey);
+                            nearbyRoutes.push({
+                                co: 'KMB',
+                                route: e.route,
+                                dest: e.dest_tc,
+                                nearStation: stop.name_tc,
+                                eta: calcMinutes(e.eta),
+                                dir: e.dir,
+                                service_type: e.service_type
+                            });
+                        }
+                    });
+                }
+
+                document.getElementById('nearby-loading').style.display = 'none';
+                renderNearbyList(nearbyRoutes);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('nearby-loading').innerHTML = '<p>API載入失敗</p>';
+            }
         }
 
         function renderNearbyList(routes) {
@@ -561,7 +572,7 @@
             const bounds = [];
             stations.forEach((st) => {
                 const marker = L.circleMarker([st.lat, st.lng], {
-                    color: st.co === 'CTB' ? '#FFCC00' : '#FFCC00', /* 統一標記使用黃色 */
+                    color: '#FFCC00',
                     fillColor: '#FFFFFF', fillOpacity: 1, radius: 6, weight: 3
                 }).addTo(map);
                 mapMarkers.push(marker);
@@ -601,7 +612,6 @@
                     const apiDir = dir === 'inbound' ? 'I' : 'O';
 
                     if (co === 'KMB') {
-                        /* 修正 KMB ETA 讀取不到的問題: 直接抓取該站點所有預報，在前端過濾，避免 service_type 異常導致讀取失敗 */
                         const res = await fetch(`${KMB_API_BASE}/stop-eta/${stopId}`);
                         const data = await res.json();
                         validEtas = data.data.filter(e => e.eta && e.route === route && e.dir === apiDir).slice(0, 3);
@@ -613,7 +623,6 @@
                     
                     if(validEtas.length > 0) {
                         const labels = ['1', '2', '3'];
-                        /* 統一使用淺黃色作為時間顯示框 */
                         dropDown.innerHTML = validEtas.map((e, i) => `
                             <div class="eta-item" style="background: var(--kmb-yellow-light); color: var(--kmb-text-dark);">
                                 <span>${labels[i]}</span> <span>${calcMinutes(e.eta)}</span>
