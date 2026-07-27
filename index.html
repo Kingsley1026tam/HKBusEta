@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>香港巴士預報 (Real API)</title>
+    <title>bus@魚蛋頭冇尊嚴</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -303,18 +303,18 @@
     <div id="page-nearby" class="page-container active">
         <div class="loading-container" id="nearby-loading">
             <div class="spinner"></div>
-            <p>正在定位並搜尋附近巴士站...</p>
+            <p>正在定位...</p>
         </div>
         <div id="nearby-list"></div>
     </div>
 
     <div id="page-search" class="page-container">
         <div class="search-bar-container">
-            <input type="text" id="route-search" class="search-input" placeholder="搜尋九巴 / 城巴路線 (例: 1A, 8X)" oninput="filterRoutes()">
+            <input type="text" id="route-search" class="search-input" placeholder="搜尋路線" oninput="filterRoutes()">
         </div>
         <div class="loading-container" id="search-loading" style="display: none;">
             <div class="spinner"></div>
-            <p>載入全港路線資料中...</p>
+            <p>正在載入</p>
         </div>
         <div id="search-list"></div>
     </div>
@@ -409,18 +409,18 @@
 
                 } catch (err) {
                     console.error(err);
-                    document.getElementById('nearby-loading').innerHTML = '<p>讀取 API 失敗，請重試。</p>';
+                    document.getElementById('nearby-loading').innerHTML = '<p>API失敗</p>';
                 }
             }, (err) => {
-                alert("無法獲取定位，請允許定位權限。");
-                document.getElementById('nearby-loading').innerHTML = '<p>需要定位權限才能尋找附近巴士。</p>';
+                alert("請允許定位權限");
+                document.getElementById('nearby-loading').innerHTML = '<p>需要定位權限</p>';
             });
         }
 
         function renderNearbyList(routes) {
             const container = document.getElementById('nearby-list');
             if(routes.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#8E8E93;">附近 500 米無九巴站點</p>';
+                container.innerHTML = '<p style="text-align:center; color:#8E8E93;">附近無巴士站</p>';
                 return;
             }
             container.innerHTML = routes.map(bus => `
@@ -497,7 +497,7 @@
         async function openDetail(route, dir, service_type, dest, co) {
             const detailPage = document.getElementById('detail-page');
             detailPage.classList.add('open');
-            document.getElementById('station-list-container').innerHTML = '<div class="loading-container"><div class="spinner"></div><p>載入站點...</p></div>';
+            document.getElementById('station-list-container').innerHTML = '<div class="loading-container"><div class="spinner"></div><p>正在載入</p></div>';
 
             if (!map) {
                 map = L.map('map-container', { zoomControl: false }).setView([22.3184, 114.1695], 11);
@@ -519,7 +519,7 @@
 
                     currentRouteStops = rsData.data.map(rs => {
                         const stopInfo = allKMBStops.find(s => s.stop === rs.stop);
-                        return { id: rs.stop, seq: rs.seq, name: stopInfo ? stopInfo.name_tc : '未知站點', lat: stopInfo ? parseFloat(stopInfo.lat) : null, lng: stopInfo ? parseFloat(stopInfo.long) : null, route: route, dir: dir, service_type: service_type, co: 'KMB' };
+                        return { id: rs.stop, seq: rs.seq, name: stopInfo ? stopInfo.name_tc : '未知', lat: stopInfo ? parseFloat(stopInfo.lat) : null, lng: stopInfo ? parseFloat(stopInfo.long) : null, route: route, dir: dir, service_type: service_type, co: 'KMB' };
                     }).filter(s => s.lat !== null);
 
                 } else if (co === 'CTB') {
@@ -547,7 +547,7 @@
 
             } catch (err) {
                 console.error(err);
-                document.getElementById('station-list-container').innerHTML = '<p style="text-align:center; padding:20px;">無法讀取路線資料</p>';
+                document.getElementById('station-list-container').innerHTML = '<p style="text-align:center; padding:20px;">無法讀取資料</p>';
             }
         }
 
@@ -612,7 +612,7 @@
                     }
                     
                     if(validEtas.length > 0) {
-                        const labels = ['下一班', '第二班', '第三班'];
+                        const labels = ['1', '2', '3'];
                         /* 統一使用淺黃色作為時間顯示框 */
                         dropDown.innerHTML = validEtas.map((e, i) => `
                             <div class="eta-item" style="background: var(--kmb-yellow-light); color: var(--kmb-text-dark);">
