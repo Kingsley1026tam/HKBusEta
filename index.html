@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bus Eta</title>
+    <title>bus@魚蛋頭冇尊嚴</title>
     
     <link rel="icon" href="./favicon.ico" type="image/x-icon">
     
@@ -388,28 +388,52 @@
                 loadingEl.innerHTML = '<p>您的瀏覽器不支援定位功能</p>';
                 return;
             }
-            
+
+            // 檢查是否處於 HTTPS 安全連線環境（瀏覽器規定定位必須使用 HTTPS）
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                loadingEl.innerHTML = `
+                    <p>位置存取需要安全連線 (HTTPS)</p>
+                    <p style="font-size:13px; margin-top:8px;">請使用 https:// 開頭的網址開啟此頁面</p>
+                `;
+                return;
+            }
+
+            const handleSuccess = (pos) => {
+                userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                fetchNearbyData();
+            };
+
+            const handleError = (err) => {
+                console.warn("定位失敗/被拒絕:", err);
+                let errorMsg = '無法取得定位權限';
+                if (err.code === err.PERMISSION_DENIED) {
+                    errorMsg = '您已拒絕或未允許定位權限，請在瀏覽器設定中允許定位';
+                } else if (err.code === err.POSITION_UNAVAILABLE) {
+                    errorMsg = '無法取得目前位置資訊（請確認已開啟裝置 GPS）';
+                } else if (err.code === err.TIMEOUT) {
+                    errorMsg = '定位逾時，請檢查 GPS 訊號後重試';
+                }
+                loadingEl.innerHTML = `<p>${errorMsg}</p><button class="retry-btn" onclick="initNearby()">重新取得定位</button>`;
+            };
+
+            // 先嘗試高精度 GPS；若超時或不可用，自動降級至標準精度
             navigator.geolocation.getCurrentPosition(
-                async (pos) => {
-                    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    fetchNearbyData();
-                }, 
+                handleSuccess,
                 (err) => {
-                    console.warn("定位失敗/被拒絕:", err);
-                    let errorMsg = '無法取得定位權限';
-                    if (err.code === err.PERMISSION_DENIED) {
-                        errorMsg = '您已拒絕定位權限，請在瀏覽器設定中允許定位';
-                    } else if (err.code === err.POSITION_UNAVAILABLE) {
-                        errorMsg = '無法取得目前位置資訊';
-                    } else if (err.code === err.TIMEOUT) {
-                        errorMsg = '定位逾時，請檢查 GPS 訊號';
+                    if (err.code !== err.PERMISSION_DENIED) {
+                        navigator.geolocation.getCurrentPosition(
+                            handleSuccess,
+                            handleError,
+                            { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+                        );
+                    } else {
+                        handleError(err);
                     }
-                    loadingEl.innerHTML = `<p>${errorMsg}</p><button class="retry-btn" onclick="initNearby()">重新取得定位</button>`;
                 }, 
                 {
                     enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 0
+                    timeout: 8000,
+                    maximumAge: 30000
                 }
             );
         }
@@ -674,15 +698,14 @@
             document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
             document.querySelectorAll('.page-container').forEach(el => el.classList.remove('active'));
+            document.getElementById(`page-${tabId}`).classList.active;
             document.getElementById(`page-${tabId}`).classList.add('active');
             
             if (tabId === 'search') initSearch();
         }
 
-        // 網頁加載 1.5 秒後自動觸發定位，避免瀏覽器攔截或DOM未準備好
-        window.onload = function() {
-            setTimeout(initNearby, 1500);
-        };
+        // 頁面載入完成後立即請求定位
+        window.addEventListener('DOMContentLoaded', initNearby);
     </script>
 </body>
 </html>
