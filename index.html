@@ -54,7 +54,6 @@
             animation: fadeIn 0.3s ease;
         }
 
-        /* Loading 狀態與手動重試按鈕 */
         .loading-container {
             display: flex;
             flex-direction: column;
@@ -80,10 +79,10 @@
             background-color: var(--kmb-yellow);
             color: var(--kmb-text-dark);
             border: none;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 12px;
             font-weight: 700;
-            font-size: 15px;
+            font-size: 16px;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
@@ -321,7 +320,7 @@
     <div id="page-nearby" class="page-container active">
         <div class="loading-container" id="nearby-loading">
             <div class="spinner"></div>
-            <p>正在要求定位權限...</p>
+            <p>準備載入定位...</p>
         </div>
         <div id="nearby-list"></div>
     </div>
@@ -390,7 +389,6 @@
                 return;
             }
             
-            // 強制每次都呼叫 getCurrentPosition，帶有較短的 timeout 與最高精確度
             navigator.geolocation.getCurrentPosition(
                 async (pos) => {
                     userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -400,7 +398,7 @@
                     console.warn("定位失敗/被拒絕:", err);
                     let errorMsg = '無法取得定位權限';
                     if (err.code === err.PERMISSION_DENIED) {
-                        errorMsg = '您已拒絕定位權限，請在瀏覽器設定中允許定位後再試';
+                        errorMsg = '您已拒絕定位權限，請在瀏覽器設定中允許定位';
                     } else if (err.code === err.POSITION_UNAVAILABLE) {
                         errorMsg = '無法取得目前位置資訊';
                     } else if (err.code === err.TIMEOUT) {
@@ -681,7 +679,10 @@
             if (tabId === 'search') initSearch();
         }
 
-        window.onload = initNearby;
+        // 網頁加載 1.5 秒後自動觸發定位，避免瀏覽器攔截或DOM未準備好
+        window.onload = function() {
+            setTimeout(initNearby, 1500);
+        };
     </script>
 </body>
 </html>
